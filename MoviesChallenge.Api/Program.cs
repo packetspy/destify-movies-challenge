@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using MoviesChallenge.Domain.Data;
+using MoviesChallenge.Infra.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +9,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<MovieDbContext>(options => options.UseInMemoryDatabase("MoviesDB"));
 
 var app = builder.Build();
+
+
+using (var scope = app.Services.CreateScope())
+    MovieSeeder.RunSeed(scope);
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

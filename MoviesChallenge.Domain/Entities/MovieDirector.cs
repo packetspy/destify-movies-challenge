@@ -1,10 +1,8 @@
 ﻿namespace MoviesChallenge.Domain.Entities;
 
-public class MovieRating : BaseModel
+public class MovieDirector
 {
-    public string? Source { get; set; }
-
-    public string? Value { get; set; }
+    public int DirectorId { get; set; }
 
     public int MovieId { get; set; }
 

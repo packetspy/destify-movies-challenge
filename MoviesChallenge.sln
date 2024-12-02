@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoviesChallenge.Domain", "M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieChallenge.Tests", "MovieChallenge.Tests\MovieChallenge.Tests.csproj", "{224EC3B1-3F7E-47E8-92C1-4D633139E5C2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoviesChallenge.Infra", "MoviesChallenge.Infra\MoviesChallenge.Infra.csproj", "{8C975E60-CDA6-4FAE-8AD9-F15F1ADF43A1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{224EC3B1-3F7E-47E8-92C1-4D633139E5C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{224EC3B1-3F7E-47E8-92C1-4D633139E5C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{224EC3B1-3F7E-47E8-92C1-4D633139E5C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C975E60-CDA6-4FAE-8AD9-F15F1ADF43A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C975E60-CDA6-4FAE-8AD9-F15F1ADF43A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C975E60-CDA6-4FAE-8AD9-F15F1ADF43A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C975E60-CDA6-4FAE-8AD9-F15F1ADF43A1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
