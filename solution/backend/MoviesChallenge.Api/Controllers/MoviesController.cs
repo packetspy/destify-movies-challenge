@@ -23,7 +23,7 @@ public class MoviesController : ControllerBase
     }
 
     [HttpGet("{uniqueId}")]
-    public async Task<IActionResult> GetMovieById(Guid uniqueId)
+    public async Task<IActionResult> GetMovieByUniqueId(Guid uniqueId)
     {
         var movie = await _movieService.GetByUniqueIdAsync(uniqueId);
         return movie != null ? Ok(movie) : NotFound();
@@ -35,7 +35,7 @@ public class MoviesController : ControllerBase
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var createdMovie = await _movieService.AddAsync(movie);
-        return CreatedAtAction(nameof(GetMovieById), new { uniqueId = createdMovie.UniqueId }, createdMovie);
+        return CreatedAtAction(nameof(GetMovieByUniqueId), new { uniqueId = createdMovie.UniqueId }, createdMovie);
     }
 
     [HttpPut("{uniqueId}")]

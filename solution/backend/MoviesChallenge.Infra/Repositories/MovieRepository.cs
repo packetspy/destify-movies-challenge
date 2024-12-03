@@ -14,47 +14,77 @@ namespace MoviesChallenge.Infra.Repositories
             _context = context;
         }
 
-        public Task AddAsync(Movie movie)
+        public async Task<List<Movie>> GetAllAsync()
         {
-            throw new NotImplementedException();
-        }
+            if (_context == null || _context.Movies == null)
+                throw new Exception("Invalid Database");
 
-        public Task DeleteAsync(Guid uniqueId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task UpdateAsync(Movie movie)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Movie?> GetByUniqueIdAsync(Guid uniqueId)
-        {
-            var movie = new Movie();
-            if (_context is not null && _context.Movies is not null)
-                movie = await _context.Movies
+            return await _context.Movies
                     .Include(m => m.Actors)
                     .Include(m => m.Directors)
+                    .Include(m => m.Ratings)
+                    .AsNoTracking().ToListAsync();
+        }
+        
+        public async Task<Movie?> GetByUniqueIdAsync(Guid uniqueId)
+        {
+            if (_context == null || _context.Movies == null)
+                throw new Exception("Invalid Database");
+
+            var movie = await _context.Movies
+                    .Include(m => m.Actors)
+                    .Include(m => m.Directors)
+                    .Include(m => m.Ratings)
                     .FirstOrDefaultAsync(m => m.UniqueId == uniqueId);
 
             return movie;
         }
-
-        public async Task<List<Movie>> GetAllAsync()
-        {
-            if (_context is not null && _context.Movies is not null)
-                return await _context.Movies
-                    .Include(m => m.Actors)
-                    .Include(m => m.Directors)
-                    .AsNoTracking().ToListAsync();
-
-            return [];
-        }
-
+        
         public Task<List<Movie>> SearchByTitleAsync(string title)
         {
             throw new NotImplementedException();
+        }
+        
+        public async Task<Movie> AddAsync(Movie movie)
+        {
+            if (_context == null || _context.Movies == null)
+                throw new Exception("Invalid Database");
+
+            var model = await _context.Movies.AddAsync(movie);
+            await _context.SaveChangesAsync();
+            return model.Entity;
+        }
+
+        public async Task<bool> UpdateAsync(Movie movie)
+        {
+            if (_context == null || _context.Movies == null)
+                throw new Exception("Invalid Database");
+
+            var originalMovie = await GetByUniqueIdAsync(movie.UniqueId);
+            if (originalMovie == null)
+                return false;
+
+            movie.Id = originalMovie.Id;
+            var model = _context.Movies.Update(movie);
+            await _context.SaveChangesAsync();
+
+            return model.State == EntityState.Modified;
+        }
+        
+        public async Task<bool> DeleteAsync(Guid uniqueId)
+        {
+            if (_context == null || _context.Movies == null)
+                throw new Exception("Invalid Database");
+
+            var movie = await GetByUniqueIdAsync(uniqueId);
+
+            if (movie == null)
+                return false;
+
+            var model = _context.Movies.Remove(movie);
+            await _context.SaveChangesAsync();
+            
+            return model.State == EntityState.Deleted;
         }
     }
 }

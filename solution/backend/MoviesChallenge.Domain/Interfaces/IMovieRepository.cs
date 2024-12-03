@@ -4,10 +4,10 @@ namespace MoviesChallenge.Domain.Interfaces;
 
 public interface IMovieRepository
 {
+    Task<List<Movie>> GetAllAsync();
     Task<Movie?> GetByUniqueIdAsync(Guid uniqueId);
     Task<List<Movie>> SearchByTitleAsync(string title);
-    Task<List<Movie>> GetAllAsync();
-    Task AddAsync(Movie movie);
-    Task UpdateAsync(Movie movie);
-    Task DeleteAsync(Guid uniqueId);
+    Task<Movie> AddAsync(Movie movie);
+    Task<bool> UpdateAsync(Movie movie);
+    Task<bool> DeleteAsync(Guid uniqueId);
 }

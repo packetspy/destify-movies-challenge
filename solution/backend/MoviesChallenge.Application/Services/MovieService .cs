@@ -12,34 +12,29 @@ public class MovieService : IMovieService
     {
         _movieRepository = movieRepository;
     }
-
-    public Task<Movie> AddAsync(Movie movie)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<bool> DeleteAsync(Guid uniqueId)
-    {
-        throw new NotImplementedException();
-    }
-
+    
     public async Task<List<Movie>> GetAllAsync()
     {
         return await _movieRepository.GetAllAsync();
     }
-
-    public Task<Movie?> GetByUniqueIdAsync(Guid uniqueId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task<Movie?> GetMovieByUniqueIdAsync(Guid uniqueId)
+    
+    public async Task<Movie?> GetByUniqueIdAsync(Guid uniqueId)
     {
         return await _movieRepository.GetByUniqueIdAsync(uniqueId);
     }
-
-    public Task<bool> UpdateAsync(Guid uniqueId, Movie movie)
+    
+    public async Task<Movie> AddAsync(Movie movie)
     {
-        throw new NotImplementedException();
+        return await _movieRepository.AddAsync(movie);
+    }
+    
+    public async Task<bool> UpdateAsync(Guid uniqueId, Movie movie)
+    {
+        return await _movieRepository.UpdateAsync(movie);
+    }
+
+    public async Task<bool> DeleteAsync(Guid uniqueId)
+    {
+        return await _movieRepository.DeleteAsync(uniqueId);
     }
 }
