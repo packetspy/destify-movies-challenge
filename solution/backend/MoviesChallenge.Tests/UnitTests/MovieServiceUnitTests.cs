@@ -1,10 +1,13 @@
-﻿using Moq;
+﻿using Microsoft.AspNetCore.Mvc;
+using Moq;
+using MoviesChallenge.Api.Controllers;
+using MoviesChallenge.Application.Interfaces;
 using MoviesChallenge.Application.Services;
 using MoviesChallenge.Domain.Entities;
 using MoviesChallenge.Domain.Interfaces;
 
 namespace MoviesChallenge.Tests.UnitTests;
-public class MovieServiceTests
+public class MovieServiceUnitTests
 {
     [Fact]
     public async Task GetMovieByIdAsync_ShouldReturnMovie_WhenMovieExists()
@@ -16,7 +19,7 @@ public class MovieServiceTests
         var service = new MovieService(mockRepo.Object);
 
         // Act
-        var result = await service.GetMovieByUniqueIdAsync(Guid.NewGuid());
+        var result = await service.GetByUniqueIdAsync(Guid.NewGuid());
 
         // Assert
         Assert.NotNull(result);
