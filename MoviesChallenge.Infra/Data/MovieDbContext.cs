@@ -32,4 +32,40 @@ public class MovieDbContext : DbContext
             .HasForeignKey(r => r.MovieId)
             .OnDelete(DeleteBehavior.Cascade);
     }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        UpdateBaseModelInformation();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        UpdateBaseModelInformation();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    private void UpdateBaseModelInformation()
+    {
+        var timestamp = DateTime.UtcNow;
+        var entities = ChangeTracker
+         .Entries().Where(x => (x.Entity is BaseModel || x.Entity is BaseModel)
+                 && (x.State == EntityState.Added || x.State == EntityState.Modified));
+
+        foreach (var entity in entities)
+        {
+            if (entity.State == EntityState.Added)
+            {
+
+                entity.Property("UniqueId").CurrentValue = Guid.NewGuid();
+                entity.Property("CreatedAt").CurrentValue = timestamp;
+                entity.Property("ModifiedAt").CurrentValue = null;
+            }
+            else
+            {
+                entity.Property("CreatedAt").IsModified = false;
+                entity.Property("ModifiedAt").CurrentValue = timestamp;
+            }
+        }
+    }
 }

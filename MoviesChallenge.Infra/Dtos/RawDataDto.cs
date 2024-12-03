@@ -2,7 +2,7 @@
 
 namespace MoviesChallenge.Infra.Dtos;
 
-public class MovieDto
+public class RawDataDto
 {
     public string? Title { get; set; }
 

@@ -8,7 +8,7 @@ namespace MoviesChallenge.Infra.Data;
 
 public class MovieSeeder
 {
-    private static List<MovieDto> moviesList = new List<MovieDto>();
+    private static List<RawDataDto> moviesList = new List<RawDataDto>();
     private static HashSet<Actor> actorsList = new HashSet<Actor>();
     private static HashSet<Director> directorsList = new HashSet<Director>();
 
@@ -20,7 +20,7 @@ public class MovieSeeder
         using (StreamReader r = new StreamReader(path))
         {
             string json = r.ReadToEnd();
-            moviesList = JsonSerializer.Deserialize<List<MovieDto>>(json);
+            moviesList = JsonSerializer.Deserialize<List<RawDataDto>>(json);
         }
 
         if (moviesList != null) 
