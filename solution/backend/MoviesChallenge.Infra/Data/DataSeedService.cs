@@ -20,78 +20,79 @@ public class DataSeedService : IDataSeedService
         _context = context;
     }
 
-    public async Task RunSeedAsync()
+    public async Task RunSeedAsync() 
     {
-        var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Data/movies.json");
-
-        using (StreamReader r = new StreamReader(path))
+        if (!_context.Movies.Any())
         {
-            string json = r.ReadToEnd();
-            moviesList = JsonSerializer.Deserialize<List<RawDataDto>>(json);
-        }
-
-        if (moviesList != null)
-        {
-            foreach (var line in moviesList)
+            var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Data/movies.json");
+            using (StreamReader stream = new StreamReader(path))
             {
-                var movie = new Movie
+                string json = stream.ReadToEnd();
+                moviesList = JsonSerializer.Deserialize<List<RawDataDto>>(json);
+            }
+
+            if (moviesList != null)
+            {
+                foreach (var movieData in moviesList)
                 {
-                    Title = line.Title,
-                    Year = Convert.ToInt32(line.Year),
-                    Rated = line.Rated,
-                    Genre = line.Genre,
-                    Plot = line.Plot,
-                    Language = line.Language,
-                    Country = line.Country,
-                    Poster = line.Poster,
-                    Ratings = line.Ratings,
-                };
+                    var existingMovie = await _context.Movies
+                        .Include(m => m.Actors)
+                        .Include(m => m.Directors)
+                        .Include(m => m.Ratings)
+                        .FirstOrDefaultAsync(m => m.Title == movieData.Title && m.Year == Convert.ToInt32(movieData.Year));
 
-                LoadActors(line?.Actors);
-                LoadDirectors(line?.Director);
+                    if (existingMovie == null)
+                    {
+                        var movie = new Movie
+                        {
+                            Title = movieData.Title,
+                            Year = Convert.ToInt32(movieData.Year),
+                            Rated = movieData.Rated,
+                            Genre = movieData.Genre,
+                            Plot = movieData.Plot,
+                            Language = movieData.Language,
+                            Country = movieData.Country,
+                            Poster = movieData.Poster
+                        };
 
-                movie.Actors = actorsList.ToList();
-                movie.Directors = directorsList.ToList();
+                        foreach (var actorName in movieData.Actors.Split(", "))
+                        {
+                            var actor = await _context.Actors.FirstOrDefaultAsync(a => a.Name == actorName);
+                            if (actor == null)
+                            {
+                                actor = new Actor { Name = actorName };
+                                _context.Actors.Add(actor);
+                            }
+                            movie.Actors.Add(actor);
+                        }
 
-                movieList.Add(movie);
-                actorsList.Clear();
-                directorsList.Clear();
+                        foreach (var directorName in movieData.Director.Split(", "))
+                        {
+                            var director = await _context.Directors.FirstOrDefaultAsync(d => d.Name == directorName);
+                            if (director == null)
+                            {
+                                director = new Director { Name = directorName };
+                                _context.Directors.Add(director);
+                            }
+                            movie.Directors.Add(director);
+                        }
+
+                        foreach (var ratingData in movieData.Ratings)
+                        {
+                            movie.Ratings.Add(new MovieRating
+                            {
+                                Source = ratingData.Source,
+                                Value = ratingData.Value
+                            });
+                        }
+
+                        _context.Movies.Add(movie);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
             }
         }
-
-        if (!await _context.Movies.AnyAsync())
-            _context?.Movies?.AddRangeAsync(movieList);
-
-        await _context?.SaveChangesAsync();
     }
 
-    private void LoadActors(string actors)
-    {
-        actors.Split([","], StringSplitOptions.RemoveEmptyEntries).ToList().ForEach(x => {
-            var existentActor = _context?.Actors?.Where(n => n.Name == x.Trim()).FirstOrDefault();
-            if (existentActor != null)
-                actorsList.Add(existentActor);
-            else
-            {
-                var newActor = new Actor { Name = x.Trim() };
-                _context?.Actors?.Add(newActor);
-                actorsList.Add(newActor);
-            }
-        });
-    }
-
-    private void LoadDirectors(string directors)
-    {
-        directors.Split([","], StringSplitOptions.RemoveEmptyEntries).ToList().ForEach(x => {
-            var existentDirector = _context?.Directors?.Where(n => n.Name == x.Trim()).FirstOrDefault();
-            if (existentDirector != null)
-                directorsList.Add(existentDirector);
-            else
-            {
-                var newDirector = new Director { Name = x.Trim() };
-                _context?.Directors?.Add(newDirector);
-                directorsList.Add(newDirector);
-            }
-        });
-    }
 }

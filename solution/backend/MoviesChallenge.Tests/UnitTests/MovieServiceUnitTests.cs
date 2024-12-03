@@ -83,7 +83,7 @@ public class MovieServiceUnitTests
     {
         // Arrange
         var movieDto = new MovieDto { Title = "Movie 1" };
-        _mockMovieRepository.Setup(repo => repo.AddAsync(It.IsAny<Movie>())).ReturnsAsync(new Movie());
+        _mockMovieRepository.Setup(repo => repo.AddAsync(It.IsAny<Movie>())).ReturnsAsync(new Movie { Title = "Movie 1" });
 
         // Act
         var result = await _movieService.AddAsync(movieDto);
