@@ -1,9 +1,5 @@
-using Microsoft.EntityFrameworkCore;
-using MoviesChallenge.Application.Interfaces;
-using MoviesChallenge.Application.Services;
-using MoviesChallenge.Domain.Interfaces;
+using MoviesChallenge.Api;
 using MoviesChallenge.Infra.Data;
-using MoviesChallenge.Infra.Repositories;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,18 +9,9 @@ builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializ
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//Add Services
-builder.Services.AddScoped<IMovieService, MovieService>();
-//services.AddScoped<IActorService, ActorService>();
-//services.AddScoped<IMovieRatingService, MovieRatingService>();
-
-//Add Repositories
-builder.Services.AddScoped<IMovieRepository, MovieRepository>();
-//services.AddScoped<IActorRepository, ActorRepository>();
-//services.AddScoped<IMovieRatingRepository, MovieRatingRepository>();
-
-//Add Database Context
-builder.Services.AddDbContext<MovieDbContext>(options => options.UseInMemoryDatabase("MoviesDB"));
+builder.Services.AddDbContext();
+builder.Services.AddServices();
+builder.Services.AddRepositories();
 
 var app = builder.Build();
 
@@ -39,9 +26,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
+
+public partial class Program { }
