@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MoviesChallenge.Application\MoviesChallenge.Application.csproj" />
     <ProjectReference Include="..\MoviesChallenge.Domain\MoviesChallenge.Domain.csproj" />
   </ItemGroup>
 

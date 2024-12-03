@@ -2,6 +2,7 @@
 using MoviesChallenge.Domain.Entities;
 using MoviesChallenge.Domain.Interfaces;
 using MoviesChallenge.Infra.Data;
+using System.Xml.Linq;
 
 namespace MoviesChallenge.Infra.Repositories
 {
@@ -40,9 +41,19 @@ namespace MoviesChallenge.Infra.Repositories
             return movie;
         }
         
-        public Task<List<Movie>> SearchByTitleAsync(string title)
+        public async Task<List<Movie>> SearchByTitleAsync(string title, bool exactMatch = false)
         {
-            throw new NotImplementedException();
+            if (_context == null || _context.Movies == null)
+                throw new Exception("Invalid Database");
+
+            var pattern = exactMatch ? title : $"%{title}%";
+            return await _context.Movies
+            .Where(m => EF.Functions.Like(m.Title, $"%{title}%"))
+            .AsNoTracking()
+            .Include(m => m.Actors)
+            .Include(m => m.Ratings)
+            .Include(m => m.Directors)
+            .ToListAsync();
         }
         
         public async Task<Movie> AddAsync(Movie movie)
@@ -60,15 +71,16 @@ namespace MoviesChallenge.Infra.Repositories
             if (_context == null || _context.Movies == null)
                 throw new Exception("Invalid Database");
 
-            var originalMovie = await GetByUniqueIdAsync(movie.UniqueId);
+            var originalMovie = await _context.Movies.FirstOrDefaultAsync(x => x.UniqueId == movie.UniqueId);
             if (originalMovie == null)
                 return false;
 
             movie.Id = originalMovie.Id;
             var model = _context.Movies.Update(movie);
+            bool updated = model.State == EntityState.Modified;
             await _context.SaveChangesAsync();
 
-            return model.State == EntityState.Modified;
+            return updated;
         }
         
         public async Task<bool> DeleteAsync(Guid uniqueId)
@@ -76,15 +88,16 @@ namespace MoviesChallenge.Infra.Repositories
             if (_context == null || _context.Movies == null)
                 throw new Exception("Invalid Database");
 
-            var movie = await GetByUniqueIdAsync(uniqueId);
+            var movie = await _context.Movies.FirstOrDefaultAsync(x => x.UniqueId == uniqueId);
 
             if (movie == null)
                 return false;
 
             var model = _context.Movies.Remove(movie);
+            bool deleted = model.State == EntityState.Deleted;
             await _context.SaveChangesAsync();
-            
-            return model.State == EntityState.Deleted;
+
+            return deleted;
         }
     }
 }

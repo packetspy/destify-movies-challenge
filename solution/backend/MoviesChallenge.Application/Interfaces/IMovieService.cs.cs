@@ -1,16 +1,18 @@
-﻿using MoviesChallenge.Domain.Entities;
+﻿using MoviesChallenge.Application.Dtos;
 
 namespace MoviesChallenge.Application.Interfaces;
 
 public interface IMovieService
 {
-    Task<List<Movie>> GetAllAsync();
+    Task<IEnumerable<MovieDto>> GetAllAsync();
 
-    Task<Movie?> GetByUniqueIdAsync(Guid uniqueId);
+    Task<IEnumerable<MovieDto>> SearchMoviesAsync(string title);
 
-    Task<Movie> AddAsync(Movie movie);
+    Task<MovieDto?> GetByUniqueIdAsync(Guid uniqueId);
 
-    Task<bool> UpdateAsync(Guid uniqueId, Movie movie);
+    Task<MovieDto> AddAsync(MovieDto movieDto);
+
+    Task<bool> UpdateAsync(Guid uniqueId, MovieDto movieDto);
 
     Task<bool> DeleteAsync(Guid uniqueId);
 }

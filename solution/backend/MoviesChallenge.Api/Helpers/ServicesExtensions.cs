@@ -5,13 +5,19 @@ using MoviesChallenge.Domain.Interfaces;
 using MoviesChallenge.Infra.Data;
 using MoviesChallenge.Infra.Repositories;
 
-namespace MoviesChallenge.Api;
+namespace MoviesChallenge.Api.Helpers;
 
 public static class ServicesExtensions
 {
     public static IServiceCollection AddDbContext(this IServiceCollection services)
     {
         services.AddDbContext<MovieDbContext>(options => options.UseInMemoryDatabase("MoviesDB"));
+        services.AddTransient<IDataSeedService, DataSeedService>();
+
+        var _serviceProvider = services.BuildServiceProvider();
+        var _dataSeedService = _serviceProvider.GetRequiredService<IDataSeedService>();
+        _dataSeedService.RunSeedAsync().Wait();
+
         return services;
     }
 

@@ -1,4 +1,4 @@
-using MoviesChallenge.Api;
+using MoviesChallenge.Api.Helpers;
 using MoviesChallenge.Infra.Data;
 using System.Text.Json.Serialization;
 
@@ -15,15 +15,14 @@ builder.Services.AddRepositories();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-    MovieSeeder.RunSeed(scope);
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<TokenMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseAuthorization();

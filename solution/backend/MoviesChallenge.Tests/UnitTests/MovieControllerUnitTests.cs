@@ -1,48 +1,68 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MoviesChallenge.Api.Controllers;
+using MoviesChallenge.Application.Dtos;
 using MoviesChallenge.Application.Interfaces;
-using MoviesChallenge.Domain.Entities;
 
-namespace MoviesChallenge.Tests.IntegrationTests;
+namespace MoviesChallenge.Tests.UnitTests;
 
-public class MovieControllerUnitTests
+public class MoviesControllerUnitTests
 {
-    private readonly Mock<IMovieService> _mockService;
+    private readonly Mock<IMovieService> _mockMovieService;
     private readonly MoviesController _controller;
 
-    public MovieControllerUnitTests()
+    public MoviesControllerUnitTests()
     {
-        _mockService = new Mock<IMovieService>();
-        _controller = new MoviesController(_mockService.Object);
+        _mockMovieService = new Mock<IMovieService>();
+        _controller = new MoviesController(_mockMovieService.Object);
     }
 
     [Fact]
-    public async Task GetAllMovies_ReturnsOkWithMovies()
+    public async Task GetAllMovies_ReturnsOkResult_WithListOfMovies()
     {
         // Arrange
-        var mockMovies = new List<Movie>
-        {
-            new Movie { Title = "Movie 1"},
-            new Movie { Title = "Movie 2"}
-        };
-        _mockService.Setup(s => s.GetAllAsync()).ReturnsAsync(mockMovies);
+        var movies = new List<MovieDto> { new MovieDto { UniqueId = Guid.NewGuid(), Title = "Test Movie" } };
+        _mockMovieService.Setup(service => service.GetAllAsync()).ReturnsAsync(movies);
 
         // Act
         var result = await _controller.GetAllMovies();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedMovies = Assert.IsAssignableFrom<IEnumerable<Movie>>(okResult.Value);
-        Assert.Equal(2, returnedMovies.Count());
+        var returnMovies = Assert.IsType<List<MovieDto>>(okResult.Value);
+        Assert.Single(returnMovies);
     }
 
     [Fact]
-    public async Task GetMovieById_ReturnsNotFound_WhenMovieDoesNotExist()
+    public async Task SearchMovies_ReturnsBadRequest_WhenTitleIsNullOrEmpty()
+    {
+        // Act
+        var result = await _controller.SearchMovies(string.Empty);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal("Movie title is required for search.", badRequestResult.Value);
+    }
+
+    [Fact]
+    public async Task SearchMovies_ReturnsOkResult_WithListOfMovies()
     {
         // Arrange
-        _mockService.Setup(s => s.GetByUniqueIdAsync(It.IsAny<Guid>())).ReturnsAsync((Movie?)null);
+        var movies = new List<MovieDto> { new MovieDto { UniqueId = Guid.NewGuid(), Title = "Test Movie" } };
+        _mockMovieService.Setup(service => service.SearchMoviesAsync(It.IsAny<string>())).ReturnsAsync(movies);
 
+        // Act
+        var result = await _controller.SearchMovies("Test");
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnMovies = Assert.IsType<List<MovieDto>>(okResult.Value);
+        Assert.Single(returnMovies);
+    }
+
+    [Fact]
+    public async Task GetMovieByUniqueId_ReturnsNotFound_WhenMovieDoesNotExist()
+    {
         // Act
         var result = await _controller.GetMovieByUniqueId(Guid.NewGuid());
 
@@ -51,19 +71,112 @@ public class MovieControllerUnitTests
     }
 
     [Fact]
-    public async Task CreateMovie_ReturnsCreatedAtAction_WhenSuccessful()
+    public async Task GetMovieByUniqueId_ReturnsOkResult_WithMovie()
     {
         // Arrange
-        var newMovie = new Movie { Title = "New Movie" };
-        var createdMovie = new Movie { Title = "New Movie", Id = 1 };
-        _mockService.Setup(s => s.AddAsync(newMovie)).ReturnsAsync(createdMovie);
+        var movie = new MovieDto { UniqueId = Guid.NewGuid(), Title = "Test Movie" };
+        _mockMovieService.Setup(service => service.GetByUniqueIdAsync(It.IsAny<Guid>())).ReturnsAsync(movie);
 
         // Act
-        var result = await _controller.CreateMovie(newMovie);
+        var result = await _controller.GetMovieByUniqueId(Guid.NewGuid());
 
         // Assert
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result);
-        Assert.Equal("GetMovieByUniqueId", createdResult.ActionName);
-        Assert.Equal(1, ((Movie)createdResult.Value).Id);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnMovie = Assert.IsType<MovieDto>(okResult.Value);
+        Assert.Equal(movie.UniqueId, returnMovie.UniqueId);
+    }
+
+    [Fact]
+    public async Task CreateMovie_ReturnsBadRequest_WhenModelStateIsInvalid()
+    {
+        // Arrange
+        _controller.ModelState.AddModelError("Title", "Required");
+
+        // Act
+        var result = await _controller.CreateMovie(new MovieDto());
+
+        // Assert
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task CreateMovie_ReturnsCreatedAtAction_WithCreatedMovie()
+    {
+        // Arrange
+        var movie = new MovieDto { UniqueId = Guid.NewGuid(), Title = "Test Movie" };
+        _mockMovieService.Setup(service => service.AddAsync(It.IsAny<MovieDto>())).ReturnsAsync(movie);
+
+        // Act
+        var result = await _controller.CreateMovie(movie);
+
+        // Assert
+        var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
+        var returnMovie = Assert.IsType<MovieDto>(createdAtActionResult.Value);
+        Assert.Equal(movie.UniqueId, returnMovie.UniqueId);
+    }
+
+    [Fact]
+    public async Task UpdateMovie_ReturnsBadRequest_WhenModelStateIsInvalid()
+    {
+        // Arrange
+        _controller.ModelState.AddModelError("Title", "Required");
+
+        // Act
+        var result = await _controller.UpdateMovie(Guid.NewGuid(), new MovieDto());
+
+        // Assert
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task UpdateMovie_ReturnsNoContent_WhenUpdateIsSuccessful()
+    {
+        // Arrange
+        _mockMovieService.Setup(service => service.UpdateAsync(It.IsAny<Guid>(), It.IsAny<MovieDto>())).ReturnsAsync(true);
+
+        // Act
+        var result = await _controller.UpdateMovie(Guid.NewGuid(), new MovieDto());
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task UpdateMovie_ReturnsNotFound_WhenMovieDoesNotExist()
+    {
+        // Arrange
+        _mockMovieService.Setup(service => service.UpdateAsync(It.IsAny<Guid>(), It.IsAny<MovieDto>())).ReturnsAsync(false);
+
+        // Act
+        var result = await _controller.UpdateMovie(Guid.NewGuid(), new MovieDto());
+
+        // Assert
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task DeleteMovie_ReturnsNoContent_WhenDeleteIsSuccessful()
+    {
+        // Arrange
+        _mockMovieService.Setup(service => service.DeleteAsync(It.IsAny<Guid>())).ReturnsAsync(true);
+
+        // Act
+        var result = await _controller.DeleteMovie(Guid.NewGuid());
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task DeleteMovie_ReturnsNotFound_WhenMovieDoesNotExist()
+    {
+        // Arrange
+        _mockMovieService.Setup(service => service.DeleteAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+
+        // Act
+        var result = await _controller.DeleteMovie(Guid.NewGuid());
+
+        // Assert
+        Assert.IsType<NotFoundResult>(result);
     }
 }

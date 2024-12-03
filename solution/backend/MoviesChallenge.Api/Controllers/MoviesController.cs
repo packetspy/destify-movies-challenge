@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MoviesChallenge.Application.Dtos;
 using MoviesChallenge.Application.Interfaces;
-using MoviesChallenge.Domain.Entities;
 
 namespace MoviesChallenge.Api.Controllers;
 
@@ -22,6 +22,16 @@ public class MoviesController : ControllerBase
         return Ok(movies);
     }
 
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchMovies([FromQuery] string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return BadRequest("Movie title is required for search.");
+
+        var movies = await _movieService.SearchMoviesAsync(title);
+        return Ok(movies);
+    }
+
     [HttpGet("{uniqueId}")]
     public async Task<IActionResult> GetMovieByUniqueId(Guid uniqueId)
     {
@@ -30,7 +40,7 @@ public class MoviesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateMovie([FromBody] Movie movie)
+    public async Task<IActionResult> CreateMovie([FromBody] MovieDto movie)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -39,7 +49,7 @@ public class MoviesController : ControllerBase
     }
 
     [HttpPut("{uniqueId}")]
-    public async Task<IActionResult> UpdateMovie(Guid uniqueId, [FromBody] Movie movie)
+    public async Task<IActionResult> UpdateMovie(Guid uniqueId, [FromBody] MovieDto movie)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 

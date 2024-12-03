@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.EntityFrameworkCore;
+using MoviesChallenge.Application.Interfaces;
 using MoviesChallenge.Domain.Entities;
 using MoviesChallenge.Infra.Dtos;
 using System.Reflection;
@@ -6,15 +7,21 @@ using System.Text.Json;
 
 namespace MoviesChallenge.Infra.Data;
 
-public class MovieSeeder
+public class DataSeedService : IDataSeedService
 {
+    private readonly MovieDbContext _context;
     private static List<RawDataDto> moviesList = new List<RawDataDto>();
     private static HashSet<Actor> actorsList = new HashSet<Actor>();
     private static HashSet<Director> directorsList = new HashSet<Director>();
+    private static HashSet<Movie> movieList = new HashSet<Movie>();
 
-    public static void RunSeed(IServiceScope scope)
+    public DataSeedService(MovieDbContext context)
     {
-        var context = scope.ServiceProvider.GetRequiredService<MovieDbContext>();
+        _context = context;
+    }
+
+    public async Task RunSeedAsync()
+    {
         var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Data/movies.json");
 
         using (StreamReader r = new StreamReader(path))
@@ -23,8 +30,8 @@ public class MovieSeeder
             moviesList = JsonSerializer.Deserialize<List<RawDataDto>>(json);
         }
 
-        if (moviesList != null) 
-        { 
+        if (moviesList != null)
+        {
             foreach (var line in moviesList)
             {
                 var movie = new Movie
@@ -40,54 +47,49 @@ public class MovieSeeder
                     Ratings = line.Ratings,
                 };
 
-                LoadActors(scope, line?.Actors);
-                LoadDirectors(scope, line?.Director);
+                LoadActors(line?.Actors);
+                LoadDirectors(line?.Director);
 
                 movie.Actors = actorsList.ToList();
                 movie.Directors = directorsList.ToList();
-                context?.Movies?.Add(movie);
 
+                movieList.Add(movie);
                 actorsList.Clear();
                 directorsList.Clear();
             }
         }
 
-        context?.SaveChanges();
+        if (!await _context.Movies.AnyAsync())
+            _context?.Movies?.AddRangeAsync(movieList);
 
-        var ratings = context?.MovieRatings?.ToList();
-        var directors = context?.MovieDirectors?.ToList();
-        var mActors = context?.MovieActors?.ToList();
-        var actors = context?.Actors?.ToList();
-        var movies = context?.Movies?.ToList();
+        await _context?.SaveChangesAsync();
     }
 
-    private static void LoadActors(IServiceScope scope, string actors)
+    private void LoadActors(string actors)
     {
-        var context = scope.ServiceProvider.GetRequiredService<MovieDbContext>();
         actors.Split([","], StringSplitOptions.RemoveEmptyEntries).ToList().ForEach(x => {
-            var existentActor = context?.Actors?.Where(n => n.Name == x.Trim()).FirstOrDefault();
+            var existentActor = _context?.Actors?.Where(n => n.Name == x.Trim()).FirstOrDefault();
             if (existentActor != null)
                 actorsList.Add(existentActor);
             else
             {
                 var newActor = new Actor { Name = x.Trim() };
-                context?.Actors?.Add(newActor);
+                _context?.Actors?.Add(newActor);
                 actorsList.Add(newActor);
             }
         });
     }
 
-    private static void LoadDirectors(IServiceScope scope, string directors)
+    private void LoadDirectors(string directors)
     {
-        var context = scope.ServiceProvider.GetRequiredService<MovieDbContext>();
         directors.Split([","], StringSplitOptions.RemoveEmptyEntries).ToList().ForEach(x => {
-            var existentDirector = context?.Directors?.Where(n => n.Name == x.Trim()).FirstOrDefault();
+            var existentDirector = _context?.Directors?.Where(n => n.Name == x.Trim()).FirstOrDefault();
             if (existentDirector != null)
                 directorsList.Add(existentDirector);
             else
             {
                 var newDirector = new Director { Name = x.Trim() };
-                context?.Directors?.Add(newDirector);
+                _context?.Directors?.Add(newDirector);
                 directorsList.Add(newDirector);
             }
         });
