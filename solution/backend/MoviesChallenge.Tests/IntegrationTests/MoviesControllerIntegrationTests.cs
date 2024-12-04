@@ -38,11 +38,11 @@ public class MoviesControllerIntegrationTests : IClassFixture<WebApplicationFact
     public async Task SearchMovies_ReturnsOkResult_WithListOfMovies()
     {
         // Act
-        var response = await _client.GetAsync("/api/movies/search?title=Test");
+        var response = await _client.GetAsync("/api/movies/search?param=Test");
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var movies = await response.Content.ReadFromJsonAsync<List<MovieDto>>();
+        var movies = await response.Content.ReadFromJsonAsync<PagedResult<MovieDto>>();
         Assert.NotNull(movies);
     }
 
@@ -62,15 +62,15 @@ public class MoviesControllerIntegrationTests : IClassFixture<WebApplicationFact
         // Arrange
         var movie = new MovieDto { Title = "Test Movie" };
         var result = await _authenticatedClient.PostAsJsonAsync("/api/movies", movie);
-        var createdMovie = await result.Content.ReadFromJsonAsync<MovieDto>();
+        var createdMovie = await result.Content.ReadFromJsonAsync<Result<MovieDto>>();
 
         // Act
-        var response = await _client.GetAsync($"/api/movies/{createdMovie.UniqueId}");
+        var response = await _client.GetAsync($"/api/movies/{createdMovie?.Data?.UniqueId}");
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var returnMovie = await response.Content.ReadFromJsonAsync<MovieDto>();
-        Assert.Equal(createdMovie.UniqueId, returnMovie.UniqueId);
+        var returnMovie = await response.Content.ReadFromJsonAsync<Result<MovieDto>>();
+        Assert.Equal(createdMovie?.Data?.UniqueId, returnMovie?.Data?.UniqueId);
     }
 
     [Fact]
@@ -84,8 +84,8 @@ public class MoviesControllerIntegrationTests : IClassFixture<WebApplicationFact
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var createdMovie = await response.Content.ReadFromJsonAsync<MovieDto>();
-        Assert.Equal(movie.Title, createdMovie.Title);
+        var createdMovie = await response.Content.ReadFromJsonAsync<Result<MovieDto>>();
+        Assert.Equal(movie.Title, createdMovie?.Data?.Title);
     }
 
     [Fact]
@@ -107,12 +107,12 @@ public class MoviesControllerIntegrationTests : IClassFixture<WebApplicationFact
         // Arrange
         var movie = new MovieDto { Title = "Test Movie" };
         var result = await _authenticatedClient.PostAsJsonAsync("/api/movies", movie);
-        var createdMovie = await result.Content.ReadFromJsonAsync<MovieDto>();
-        movie.UniqueId = createdMovie.UniqueId;
+        var createdMovie = await result.Content.ReadFromJsonAsync<Result<MovieDto>>();
+        movie.UniqueId = createdMovie.Data.UniqueId;
         movie.Title = "Updated Test Movie";
 
         // Act
-        var response = await _authenticatedClient.PutAsJsonAsync($"/api/movies/{createdMovie.UniqueId}", movie);
+        var response = await _authenticatedClient.PutAsJsonAsync($"/api/movies/{createdMovie.Data.UniqueId}", movie);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -137,10 +137,10 @@ public class MoviesControllerIntegrationTests : IClassFixture<WebApplicationFact
         // Arrange
         var movie = new MovieDto { Title = "Test Movie" };
         var result = await _authenticatedClient.PostAsJsonAsync("/api/movies", movie);
-        var createdMovie = await result.Content.ReadFromJsonAsync<MovieDto>();
+        var createdMovie = await result.Content.ReadFromJsonAsync<Result<MovieDto>>();
 
         // Act
-        var response = await _authenticatedClient.DeleteAsync($"/api/movies/{createdMovie.UniqueId}");
+        var response = await _authenticatedClient.DeleteAsync($"/api/movies/{createdMovie?.Data?.UniqueId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);

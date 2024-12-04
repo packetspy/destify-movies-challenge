@@ -6,6 +6,7 @@ using MoviesChallenge.Application.Interfaces;
 using MoviesChallenge.Application.Services;
 using MoviesChallenge.Domain.Entities;
 using MoviesChallenge.Domain.Interfaces;
+using MoviesChallenge.Domain.Models;
 
 namespace MoviesChallenge.Tests.UnitTests;
 public class MovieServiceUnitTests
@@ -13,6 +14,7 @@ public class MovieServiceUnitTests
     private readonly Mock<IMovieRepository> _mockMovieRepository;
     private readonly Mock<IActorRepository> _mockActorRepository;
     private readonly MovieService _movieService;
+    private readonly PaginationParameters paginationParams = new PaginationParameters { Page = 1, PageSize = 100 };
 
     public MovieServiceUnitTests()
     {
@@ -26,13 +28,23 @@ public class MovieServiceUnitTests
     {
         // Arrange
         var movies = new List<Movie> { new Movie { Title = "Movie1" }, new Movie { Title = "Movie2" } };
-        _mockMovieRepository.Setup(repo => repo.GetAllAsync()).ReturnsAsync(movies);
+        _mockMovieRepository.Setup(repo => repo.GetAllAsync(It.IsAny<PaginationParameters>()))
+                   .ReturnsAsync(new PagedResult<Movie>
+                   {
+                       Data = movies.Skip(0).Take(10),
+                       Meta = new PagedMetadata
+                       {
+                           TotalCount = movies.Count,
+                           Page = 1,
+                           PageSize = 10
+                       }
+                   });
 
         // Act
-        var result = await _movieService.GetAllAsync();
+        var result = await _movieService.GetAllAsync(paginationParams);
 
         // Assert
-        Assert.Equal(2, result.Count());
+        Assert.Equal(2, result.Data.Count());
     }
 
     [Fact]
@@ -40,14 +52,15 @@ public class MovieServiceUnitTests
     {
         // Arrange
         var movies = new List<Movie> { new Movie { Title = "Movie1" }, new Movie { Title = "Movie2" } };
-        _mockMovieRepository.Setup(repo => repo.SearchByTitleAsync("Movie1", false)).ReturnsAsync(movies.Where(m => m.Title == "Movie1").ToList());
+        var pagedResult = new PagedResult<Movie> { Data = movies.Where(m => m.Title == "Movie1").ToList() };
+        _mockMovieRepository.Setup(repo => repo.SearchByTitleAsync("Movie1", paginationParams, false)).ReturnsAsync(pagedResult);
 
         // Act
-        var result = await _movieService.SearchMoviesAsync("Movie1");
+        var result = await _movieService.SearchMoviesAsync("Movie1", paginationParams);
 
         // Assert
-        Assert.Single(result);
-        Assert.Equal("Movie1", result.First().Title);
+        Assert.Single(result?.Data);
+        Assert.Equal("Movie1", result?.Data?.First().Title);
     }
 
     [Fact]
@@ -61,8 +74,8 @@ public class MovieServiceUnitTests
         var result = await _movieService.GetByUniqueIdAsync(movie.UniqueId);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(movie.Title, result.Title);
+        Assert.NotNull(result?.Data);
+        Assert.Equal(movie.Title, result?.Data?.Title);
     }
 
     [Fact]
@@ -89,7 +102,7 @@ public class MovieServiceUnitTests
         var result = await _movieService.AddAsync(movieDto);
 
         // Assert
-        Assert.Equal(movieDto.Title, result.Title);
+        Assert.Equal(movieDto.Title, result?.Data?.Title);
     }
 
     [Fact]

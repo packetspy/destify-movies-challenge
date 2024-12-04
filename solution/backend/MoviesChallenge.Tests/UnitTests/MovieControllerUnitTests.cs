@@ -3,6 +3,7 @@ using Moq;
 using MoviesChallenge.Api.Controllers;
 using MoviesChallenge.Application.Dtos;
 using MoviesChallenge.Application.Interfaces;
+using MoviesChallenge.Domain.Models;
 
 namespace MoviesChallenge.Tests.UnitTests;
 
@@ -10,6 +11,7 @@ public class MoviesControllerUnitTests
 {
     private readonly Mock<IMovieService> _mockMovieService;
     private readonly MoviesController _controller;
+    private readonly PaginationParameters paginationParams = new PaginationParameters { Page = 1, PageSize = 100 };
 
     public MoviesControllerUnitTests()
     {
@@ -22,22 +24,32 @@ public class MoviesControllerUnitTests
     {
         // Arrange
         var movies = new List<MovieDto> { new MovieDto { UniqueId = Guid.NewGuid(), Title = "Test Movie" } };
-        _mockMovieService.Setup(service => service.GetAllAsync()).ReturnsAsync(movies);
+        _mockMovieService.Setup(service => service.GetAllAsync(It.IsAny<PaginationParameters>()))
+                   .ReturnsAsync(new PagedResult<MovieDto>
+                   {
+                       Data = movies.Skip(0).Take(10),
+                       Meta = new PagedMetadata
+                       {
+                           TotalCount = movies.Count,
+                           Page = 1,
+                           PageSize = 10
+                       }
+                   });
 
         // Act
-        var result = await _controller.GetAllMovies();
+        var result = await _controller.GetAllMovies(paginationParams);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnMovies = Assert.IsType<List<MovieDto>>(okResult.Value);
-        Assert.Single(returnMovies);
+        var returnMovies = Assert.IsType<PagedResult<MovieDto>>(okResult.Value);
+        Assert.Single(returnMovies.Data);
     }
 
     [Fact]
     public async Task SearchMovies_ReturnsBadRequest_WhenTitleIsNullOrEmpty()
     {
         // Act
-        var result = await _controller.SearchMovies(string.Empty);
+        var result = await _controller.SearchMovies(string.Empty, paginationParams);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -49,15 +61,24 @@ public class MoviesControllerUnitTests
     {
         // Arrange
         var movies = new List<MovieDto> { new MovieDto { UniqueId = Guid.NewGuid(), Title = "Test Movie" } };
-        _mockMovieService.Setup(service => service.SearchMoviesAsync(It.IsAny<string>())).ReturnsAsync(movies);
+        _mockMovieService.Setup(service => service.SearchMoviesAsync(It.IsAny<string>(), It.IsAny<PaginationParameters>())).ReturnsAsync(new PagedResult<MovieDto>
+        {
+            Data = movies.Skip(0).Take(10),
+            Meta = new PagedMetadata
+            {
+                TotalCount = movies.Count,
+                Page = 1,
+                PageSize = 10
+            }
+        });
 
         // Act
-        var result = await _controller.SearchMovies("Test");
+        var result = await _controller.SearchMovies("Test", paginationParams);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnMovies = Assert.IsType<List<MovieDto>>(okResult.Value);
-        Assert.Single(returnMovies);
+        var returnMovies = Assert.IsType<PagedResult<MovieDto>>(okResult.Value);
+        Assert.Single(returnMovies?.Data);
     }
 
     [Fact]
@@ -75,15 +96,15 @@ public class MoviesControllerUnitTests
     {
         // Arrange
         var movie = new MovieDto { UniqueId = Guid.NewGuid(), Title = "Test Movie" };
-        _mockMovieService.Setup(service => service.GetByUniqueIdAsync(It.IsAny<Guid>())).ReturnsAsync(movie);
+        _mockMovieService.Setup(service => service.GetByUniqueIdAsync(It.IsAny<Guid>())).ReturnsAsync(new Result<MovieDto> { Data = movie });
 
         // Act
         var result = await _controller.GetMovieByUniqueId(Guid.NewGuid());
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnMovie = Assert.IsType<MovieDto>(okResult.Value);
-        Assert.Equal(movie.UniqueId, returnMovie.UniqueId);
+        var returnMovie = Assert.IsType<Result<MovieDto>>(okResult.Value);
+        Assert.Equal(movie.UniqueId, returnMovie?.Data?.UniqueId);
     }
 
     [Fact]
@@ -104,15 +125,16 @@ public class MoviesControllerUnitTests
     {
         // Arrange
         var movie = new MovieDto { UniqueId = Guid.NewGuid(), Title = "Test Movie" };
-        _mockMovieService.Setup(service => service.AddAsync(It.IsAny<MovieDto>())).ReturnsAsync(movie);
+        var resultMovie = new Result<MovieDto> { Data = movie };
+        _mockMovieService.Setup(service => service.AddAsync(It.IsAny<MovieDto>())).ReturnsAsync(resultMovie);
 
         // Act
         var result = await _controller.CreateMovie(movie);
 
         // Assert
         var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
-        var returnMovie = Assert.IsType<MovieDto>(createdAtActionResult.Value);
-        Assert.Equal(movie.UniqueId, returnMovie.UniqueId);
+        var returnMovie = Assert.IsType<Result<MovieDto>>(createdAtActionResult.Value);
+        Assert.Equal(movie.UniqueId, returnMovie.Data?.UniqueId);
     }
 
     [Fact]
