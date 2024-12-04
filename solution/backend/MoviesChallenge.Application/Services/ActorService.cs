@@ -2,6 +2,7 @@
 using MoviesChallenge.Application.Interfaces;
 using MoviesChallenge.Domain.Entities;
 using MoviesChallenge.Domain.Interfaces;
+using MoviesChallenge.Domain.Models;
 
 namespace MoviesChallenge.Application.Services;
 
@@ -117,7 +118,7 @@ public class ActorService : IActorService
 
         foreach (var movie in movies)
         {
-            var result = (await _movieRepository.SearchByTitleAsync(movie.Title, true)).FirstOrDefault();
+            var result = (await _movieRepository.SearchByTitleAsync(movie.Title, new PaginationParameters { Page = 1, PageSize = 100 }, true)).Data?.FirstOrDefault();
             if (result == null)
                 listMovies.Add(new Movie { Title = movie.Title });
             else

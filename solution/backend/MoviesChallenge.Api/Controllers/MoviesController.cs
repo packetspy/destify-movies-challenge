@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MoviesChallenge.Application.Dtos;
 using MoviesChallenge.Application.Interfaces;
+using MoviesChallenge.Domain.Models;
 
 namespace MoviesChallenge.Api.Controllers;
 
@@ -16,19 +17,19 @@ public class MoviesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllMovies()
+    public async Task<IActionResult> GetAllMovies([FromQuery] PaginationParameters paginationParams)
     {
-        var movies = await _movieService.GetAllAsync();
-        return Ok(movies);
+        var pagedResult = await _movieService.GetAllAsync(paginationParams);
+        return Ok(pagedResult);
     }
 
     [HttpGet("search")]
-    public async Task<IActionResult> SearchMovies([FromQuery] string title)
+    public async Task<IActionResult> SearchMovies([FromQuery] string param, [FromQuery] PaginationParameters paginationParams)
     {
-        if (string.IsNullOrWhiteSpace(title))
+        if (string.IsNullOrWhiteSpace(param))
             return BadRequest("Movie title is required for search.");
 
-        var movies = await _movieService.SearchMoviesAsync(title);
+        var movies = await _movieService.SearchMoviesAsync(param, paginationParams);
         return Ok(movies);
     }
 
@@ -36,7 +37,7 @@ public class MoviesController : ControllerBase
     public async Task<IActionResult> GetMovieByUniqueId(Guid uniqueId)
     {
         var movie = await _movieService.GetByUniqueIdAsync(uniqueId);
-        return movie != null ? Ok(movie) : NotFound();
+        return movie?.Data != null ? Ok(movie) : NotFound();
     }
 
     [HttpPost]
@@ -45,7 +46,7 @@ public class MoviesController : ControllerBase
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var createdMovie = await _movieService.AddAsync(movie);
-        return CreatedAtAction(nameof(GetMovieByUniqueId), new { uniqueId = createdMovie.UniqueId }, createdMovie);
+        return CreatedAtAction(nameof(GetMovieByUniqueId), new { uniqueId = createdMovie?.Data?.UniqueId }, createdMovie);
     }
 
     [HttpPut("{uniqueId}")]

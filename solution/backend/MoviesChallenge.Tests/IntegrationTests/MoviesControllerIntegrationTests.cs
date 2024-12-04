@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MoviesChallenge.Application.Dtos;
+using MoviesChallenge.Domain.Models;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -29,7 +30,7 @@ public class MoviesControllerIntegrationTests : IClassFixture<WebApplicationFact
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var movies = await response.Content.ReadFromJsonAsync<List<MovieDto>>();
+        var movies = await response.Content.ReadFromJsonAsync<PagedResult<MovieDto>>();
         Assert.NotNull(movies);
     }
 

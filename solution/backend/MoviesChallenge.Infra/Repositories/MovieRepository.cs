@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MoviesChallenge.Domain.Entities;
 using MoviesChallenge.Domain.Interfaces;
+using MoviesChallenge.Domain.Models;
 using MoviesChallenge.Infra.Data;
-using System.Xml.Linq;
 
 namespace MoviesChallenge.Infra.Repositories
 {
@@ -15,18 +15,67 @@ namespace MoviesChallenge.Infra.Repositories
             _context = context;
         }
 
-        public async Task<List<Movie>> GetAllAsync()
+        public async Task<PagedResult<Movie>> GetAllAsync(PaginationParameters paginationParams)
         {
             if (_context == null || _context.Movies == null)
                 throw new Exception("Invalid Database");
 
-            return await _context.Movies
+            var query = _context.Movies
                     .Include(m => m.Actors)
                     .Include(m => m.Directors)
-                    .Include(m => m.Ratings)
-                    .AsNoTracking().ToListAsync();
+                    .Include(m => m.Ratings);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+               .Skip((paginationParams.Page - 1) * paginationParams.PageSize)
+               .Take(paginationParams.PageSize)
+               .ToListAsync();
+
+            return new PagedResult<Movie>
+            {
+                Data = items,
+                Meta = new PagedMetadata
+                {
+                    TotalCount = totalCount,
+                    TotalPages = (int)Math.Ceiling(totalCount / (double)paginationParams.PageSize),
+                    Page = paginationParams.Page,
+                    PageSize = paginationParams.PageSize
+                }
+            };
         }
-        
+                
+        public async Task<PagedResult<Movie>> SearchByTitleAsync(string param, PaginationParameters paginationParams, bool exactMatch = false)
+        {
+            if (_context == null || _context.Movies == null)
+                throw new Exception("Invalid Database");
+
+            var pattern = exactMatch ? param : $"%{param}%";
+            var query = _context.Movies
+            .Where(m => EF.Functions.Like(m.Title, $"%{param}%"))
+            .AsNoTracking()
+            .Include(m => m.Actors)
+            .Include(m => m.Ratings)
+            .Include(m => m.Directors);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+               .Skip((paginationParams.Page - 1) * paginationParams.PageSize)
+               .Take(paginationParams.PageSize)
+               .ToListAsync();
+
+            return new PagedResult<Movie>
+            {
+                Data = items,
+                Meta = new PagedMetadata
+                {
+                    TotalCount = totalCount,
+                    TotalPages = (int)Math.Ceiling(totalCount / (double)paginationParams.PageSize),
+                    Page = paginationParams.Page,
+                    PageSize = paginationParams.PageSize
+                }
+            };
+        }
+
         public async Task<Movie?> GetByUniqueIdAsync(Guid uniqueId)
         {
             if (_context == null || _context.Movies == null)
@@ -40,22 +89,7 @@ namespace MoviesChallenge.Infra.Repositories
 
             return movie;
         }
-        
-        public async Task<List<Movie>> SearchByTitleAsync(string title, bool exactMatch = false)
-        {
-            if (_context == null || _context.Movies == null)
-                throw new Exception("Invalid Database");
 
-            var pattern = exactMatch ? title : $"%{title}%";
-            return await _context.Movies
-            .Where(m => EF.Functions.Like(m.Title, $"%{title}%"))
-            .AsNoTracking()
-            .Include(m => m.Actors)
-            .Include(m => m.Ratings)
-            .Include(m => m.Directors)
-            .ToListAsync();
-        }
-        
         public async Task<Movie> AddAsync(Movie movie)
         {
             if (_context == null || _context.Movies == null)

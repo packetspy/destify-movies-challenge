@@ -20,9 +20,9 @@ public class MovieDto
 
     public string? Poster { get; set; }
 
-    public List<string>? Actors { get; set; }
+    public List<ActorDto>? Actors { get; set; }
 
-    public List<string>? Directors { get; set; }
+    public List<DirectorDto>? Directors { get; set; }
 
     public List<MovieRatingDto>? Ratings { get; set; } = [];
 }
