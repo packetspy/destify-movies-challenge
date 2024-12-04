@@ -1,12 +1,13 @@
 ﻿using MoviesChallenge.Domain.Entities;
+using MoviesChallenge.Domain.Models;
 
 namespace MoviesChallenge.Domain.Interfaces;
 
 public interface IActorRepository
 {
-    Task<List<Actor>> GetAllAsync();
+    Task<PagedResult<Actor>> GetAllAsync(PaginationParameters paginationParams);
+    Task<PagedResult<Actor>> SearchByNameAsync(string name, PaginationParameters paginationParams, bool exactMatch = false);
     Task<Actor?> GetByUniqueIdAsync(Guid uniqueId);
-    Task<List<Actor>> SearchByNameAsync(string name, bool exactMatch = false);
     Task<Actor> AddAsync(Actor actor);
     Task<bool> UpdateAsync(Actor actor);
     Task<bool> DeleteAsync(Guid uniqueId);

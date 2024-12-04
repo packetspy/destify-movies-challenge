@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MoviesChallenge.Domain.Entities;
 using MoviesChallenge.Domain.Interfaces;
+using MoviesChallenge.Domain.Models;
 using MoviesChallenge.Infra.Data;
 
 namespace MoviesChallenge.Infra.Repositories;
@@ -15,14 +16,62 @@ public class ActorRepository : IActorRepository
         _context = context;   
     }
 
-    public async Task<List<Actor>> GetAllAsync()
+    public async Task<PagedResult<Actor>> GetAllAsync(PaginationParameters paginationParams)
     {
         if (_context == null || _context.Actors == null)
             throw new Exception("Invalid Database");
 
-        return await _context.Actors
+        var query = _context.Actors
                 .Include(a => a.Movies)
-                .AsNoTracking().ToListAsync();
+                .AsNoTracking();
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+               .Skip((paginationParams.Page - 1) * paginationParams.PageSize)
+               .Take(paginationParams.PageSize)
+               .ToListAsync();
+
+        return new PagedResult<Actor>
+        {
+            Data = items,
+            Meta = new PagedMetadata
+            {
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)paginationParams.PageSize),
+                Page = paginationParams.Page,
+                PageSize = paginationParams.PageSize
+            }
+        };
+    }
+
+    public async Task<PagedResult<Actor>> SearchByNameAsync(string name, PaginationParameters paginationParams, bool exactMatch = false)
+    {
+        if (_context == null || _context.Actors == null)
+            throw new Exception("Invalid Database");
+
+        var pattern = exactMatch ? name : $"%{name}%";
+        var query = _context.Actors
+            .Where(m => EF.Functions.Like(m.Name, pattern))
+            .Include(a => a.Movies)
+            .AsNoTracking();
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+           .Skip((paginationParams.Page - 1) * paginationParams.PageSize)
+           .Take(paginationParams.PageSize)
+           .ToListAsync();
+
+        return new PagedResult<Actor>
+        {
+            Data = items,
+            Meta = new PagedMetadata
+            {
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)paginationParams.PageSize),
+                Page = paginationParams.Page,
+                PageSize = paginationParams.PageSize
+            }
+        };
     }
 
     public async Task<Actor?> GetByUniqueIdAsync(Guid uniqueId)
@@ -35,19 +84,6 @@ public class ActorRepository : IActorRepository
                 .FirstOrDefaultAsync(m => m.UniqueId == uniqueId);
 
         return actor;
-    }
-
-    public async Task<List<Actor>> SearchByNameAsync(string name, bool exactMatch = false)
-    {
-        if (_context == null || _context.Actors == null)
-            throw new Exception("Invalid Database");
-
-        var pattern = exactMatch ? name : $"%{name}%";
-        return await _context.Actors
-            .Where(m => EF.Functions.Like(m.Name, pattern))
-            .AsNoTracking()
-            .Include(a => a.Movies)
-            .ToListAsync();
     }
 
     public async Task<Actor> AddAsync(Actor actor)

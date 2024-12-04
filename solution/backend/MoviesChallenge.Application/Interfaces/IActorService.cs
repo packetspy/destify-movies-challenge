@@ -1,16 +1,17 @@
 ﻿using MoviesChallenge.Application.Dtos;
+using MoviesChallenge.Domain.Models;
 
 namespace MoviesChallenge.Application.Interfaces;
 
 public interface IActorService
 {
-    Task<IEnumerable<ActorDto>> GetAllAsync();
+    Task<PagedResult<ActorDto>> GetAllAsync(PaginationParameters paginationParams);
 
-    Task<IEnumerable<ActorDto>> SearchActorsAsync(string name);
+    Task<PagedResult<ActorDto>> SearchActorsAsync(string param, PaginationParameters paginationParams);
 
-    Task<ActorDto?> GetByUniqueIdAsync(Guid uniqueId);
+    Task<Result<ActorDto>?> GetByUniqueIdAsync(Guid uniqueId);
 
-    Task<ActorDto> AddAsync(ActorDto actorDto);
+    Task<Result<ActorDto>> AddAsync(ActorDto actorDto);
 
     Task<bool> UpdateAsync(Guid uniqueId, ActorDto actorDto);
 

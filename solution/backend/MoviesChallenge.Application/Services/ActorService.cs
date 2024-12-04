@@ -17,71 +17,95 @@ public class ActorService : IActorService
         _movieRepository = movieRepository;
     }
 
-    public async Task<IEnumerable<ActorDto>> GetAllAsync()
+    public async Task<PagedResult<ActorDto>> GetAllAsync(PaginationParameters paginationParams)
     {
-        var actors = await _actorRepository.GetAllAsync();
-        return actors.Select(a => new ActorDto
+        var pagedActors = await _actorRepository.GetAllAsync(paginationParams);
+        return new PagedResult<ActorDto>
         {
-            UniqueId = a.UniqueId,
-            Name = a.Name,
-            Movies = a?.Movies?.Select(m => new MovieDto {
-                UniqueId = m.UniqueId,
-                Title = m.Title,
-                Country = m.Country,
-                Genre = m.Genre,
-                Language = m.Language,
-                Plot = m.Plot,
-                Poster = m.Poster,
-                Rated = m.Rated,
-                Year = m.Year,
-            }).ToList()
-        });
-    }
-    public async Task<IEnumerable<ActorDto>> SearchActorsAsync(string name)
-    {
-        var actors = await _actorRepository.SearchByNameAsync(name);
-        return actors.Select(a => new ActorDto
-        {
-            UniqueId = a.UniqueId,
-            Name = a.Name,
-            Movies = a?.Movies?.Select(m => new MovieDto
+            Data = pagedActors?.Data?.Select(a => new ActorDto
             {
-                UniqueId = m.UniqueId,
-                Title = m.Title,
-                Country = m.Country,
-                Genre = m.Genre,
-                Language = m.Language,
-                Plot = m.Plot,
-                Poster = m.Poster,
-                Rated = m.Rated,
-                Year = m.Year,
-            }).ToList()
-        });
-    }
-
-    public async Task<ActorDto?> GetByUniqueIdAsync(Guid uniqueId)
-    {
-        var movie = await _actorRepository.GetByUniqueIdAsync(uniqueId);
-        return movie == null ? null : new ActorDto
-        {
-            UniqueId = movie.UniqueId,
-            Name = movie.Name,
-            Movies = movie?.Movies?.Select(m => new MovieDto
+                UniqueId = a.UniqueId,
+                Name = a.Name,
+                Movies = a?.Movies?.Select(m => new MovieDto
+                {
+                    UniqueId = m.UniqueId,
+                    Title = m.Title,
+                    Country = m.Country,
+                    Genre = m.Genre,
+                    Language = m.Language,
+                    Plot = m.Plot,
+                    Poster = m.Poster,
+                    Rated = m.Rated,
+                    Year = m.Year,
+                }).ToList()
+            }),
+            Meta = pagedActors?.Meta != null ? new PagedMetadata
             {
-                UniqueId = m.UniqueId,
-                Title = m.Title,
-                Country = m.Country,
-                Genre = m.Genre,
-                Language = m.Language,
-                Plot = m.Plot,
-                Poster = m.Poster,
-                Rated = m.Rated,
-                Year = m.Year,
-            }).ToList()
+                Page = paginationParams.Page,
+                PageSize = paginationParams.PageSize,
+                TotalCount = pagedActors.Meta.TotalCount,
+                TotalPages = pagedActors.Meta.TotalPages
+            } : new PagedMetadata { Page = 1, PageSize = 1, TotalCount = 1, TotalPages = 1 }
+        };
+    }
+    public async Task<PagedResult<ActorDto>> SearchActorsAsync(string param, PaginationParameters paginationParams)
+    {
+        var pagedActors = await _actorRepository.SearchByNameAsync(param, paginationParams);
+        return new PagedResult<ActorDto>
+        {
+            Data = pagedActors?.Data?.Select(a => new ActorDto
+            {
+                UniqueId = a.UniqueId,
+                Name = a.Name,
+                Movies = a?.Movies?.Select(m => new MovieDto
+                {
+                    UniqueId = m.UniqueId,
+                    Title = m.Title,
+                    Country = m.Country,
+                    Genre = m.Genre,
+                    Language = m.Language,
+                    Plot = m.Plot,
+                    Poster = m.Poster,
+                    Rated = m.Rated,
+                    Year = m.Year,
+                }).ToList()
+            }),
+            Meta = pagedActors?.Meta != null ? new PagedMetadata
+            {
+                Page = paginationParams.Page,
+                PageSize = paginationParams.PageSize,
+                TotalCount = pagedActors.Meta.TotalCount,
+                TotalPages = pagedActors.Meta.TotalPages
+            } : new PagedMetadata { Page = 1, PageSize = 1, TotalCount = 1, TotalPages = 1 }
         };
     }
 
-    public async Task<ActorDto> AddAsync(ActorDto actorDto)
+    public async Task<Result<ActorDto>?> GetByUniqueIdAsync(Guid uniqueId)
+    {
+        var actor = await _actorRepository.GetByUniqueIdAsync(uniqueId);
+        return actor == null ? null : new Result<ActorDto>
+        {
+            Data = new ActorDto
+            {
+                UniqueId = actor.UniqueId,
+                Name = actor.Name,
+                Movies = actor?.Movies?.Select(m => new MovieDto
+                {
+                    UniqueId = m.UniqueId,
+                    Title = m.Title,
+                    Country = m.Country,
+                    Genre = m.Genre,
+                    Language = m.Language,
+                    Plot = m.Plot,
+                    Poster = m.Poster,
+                    Rated = m.Rated,
+                    Year = m.Year,
+                }).ToList()
+            }
+        };
+    }
+
+    public async Task<Result<ActorDto>> AddAsync(ActorDto actorDto)
     {
         var actor = new Actor
         {
@@ -91,7 +115,15 @@ public class ActorService : IActorService
         };
 
         actor = await _actorRepository.AddAsync(actor);
-        return new ActorDto { UniqueId = actor.UniqueId, Name = actor.Name };
+        return new Result<ActorDto>
+        {
+            Data = new ActorDto
+            {
+                UniqueId = actor.UniqueId,
+                Name = actor.Name,
+                Movies = actor.Movies.Select(m => new MovieDto { UniqueId = m.UniqueId, Title = m.Title }).ToList(),
+            }
+        };
     }
     public async Task<bool> UpdateAsync(Guid uniqueId, ActorDto actorDto)
     {
@@ -109,7 +141,6 @@ public class ActorService : IActorService
     {
         return await _actorRepository.DeleteAsync(uniqueId);
     }
-
 
     private async Task<List<Movie>> GetMovies(List<MovieDto> movies)
     {

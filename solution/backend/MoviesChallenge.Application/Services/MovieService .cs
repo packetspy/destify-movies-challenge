@@ -119,23 +119,23 @@ public class MovieService : IMovieService
             Ratings = movieDto.Ratings.Select(r => new MovieRating { Source = r.Source, Value = r.Value }).ToList()
         };
 
-        var updatedMovie = await _movieRepository.AddAsync(movie);
+        var addedMovie = await _movieRepository.AddAsync(movie);
         return new Result<MovieDto>
         {
             Data = new MovieDto
             {
-                UniqueId = updatedMovie.UniqueId,
-                Title = updatedMovie.Title,
-                Country = updatedMovie.Country,
-                Genre = updatedMovie.Genre,
-                Language = updatedMovie.Language,
-                Plot = updatedMovie.Plot,
-                Poster = updatedMovie.Poster,
-                Rated = updatedMovie.Rated,
-                Year = updatedMovie.Year,
-                Actors = updatedMovie.Actors.Select(a => new ActorDto { UniqueId = a.UniqueId, Name = a.Name }).ToList(),
-                Directors = updatedMovie.Directors.Select(a => new DirectorDto { UniqueId = a.UniqueId, Name = a.Name }).ToList(),
-                Ratings = updatedMovie?.Ratings?.Select(r => new MovieRatingDto { Source = r.Source, Value = r.Value }).ToList()
+                UniqueId = addedMovie.UniqueId,
+                Title = addedMovie.Title,
+                Country = addedMovie.Country,
+                Genre = addedMovie.Genre,
+                Language = addedMovie.Language,
+                Plot = addedMovie.Plot,
+                Poster = addedMovie.Poster,
+                Rated = addedMovie.Rated,
+                Year = addedMovie.Year,
+                Actors = addedMovie.Actors.Select(a => new ActorDto { UniqueId = a.UniqueId, Name = a.Name }).ToList(),
+                Directors = addedMovie.Directors.Select(a => new DirectorDto { UniqueId = a.UniqueId, Name = a.Name }).ToList(),
+                Ratings = addedMovie?.Ratings?.Select(r => new MovieRatingDto { Source = r.Source, Value = r.Value }).ToList()
             }
         };
     }
@@ -173,7 +173,7 @@ public class MovieService : IMovieService
 
         foreach (var actor in actors)
         {
-            var result = (await _actorRepository.SearchByNameAsync(actor.Name, true)).FirstOrDefault();
+            var result = (await _actorRepository.SearchByNameAsync(actor.Name, new PaginationParameters { Page = 1, PageSize = 100 }, true)).Data?.FirstOrDefault();
             if (result == null)
                 listActors.Add(new Actor { Name = actor.Name });
             else
@@ -190,7 +190,7 @@ public class MovieService : IMovieService
 
         foreach (var director in directors)
         {
-            var result = (await _actorRepository.SearchByNameAsync(director.Name, true)).FirstOrDefault();
+            var result = (await _actorRepository.SearchByNameAsync(director.Name, new PaginationParameters { Page = 1, PageSize = 100 }, true)).Data?.FirstOrDefault();
             if (result == null)
                 listDirectors.Add(new Director { Name = director.Name });
             else

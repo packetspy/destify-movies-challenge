@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MoviesChallenge.Application.Dtos;
 using MoviesChallenge.Application.Interfaces;
+using MoviesChallenge.Domain.Models;
 
 namespace MoviesChallenge.Api.Controllers;
 
@@ -16,19 +17,19 @@ public class ActorsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllActors()
+    public async Task<IActionResult> GetAllActors([FromQuery] PaginationParameters paginationParams)
     {
-        var actors = await _actorService.GetAllAsync();
+        var actors = await _actorService.GetAllAsync(paginationParams);
         return Ok(actors);
     }
 
     [HttpGet("search")]
-    public async Task<IActionResult> SearchActors([FromQuery] string name)
+    public async Task<IActionResult> SearchActors([FromQuery] string param, [FromQuery] PaginationParameters paginationParams)
     {
-        if (string.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(param))
             return BadRequest("Actor name is required for search.");
 
-        var actors = await _actorService.SearchActorsAsync(name);
+        var actors = await _actorService.SearchActorsAsync(param, paginationParams);
         return Ok(actors);
     }
 
@@ -45,7 +46,7 @@ public class ActorsController : ControllerBase
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var createdActor = await _actorService.AddAsync(actorDto);
-        return CreatedAtAction(nameof(GetActorByUniqueId), new { uniqueId = createdActor.UniqueId }, createdActor);
+        return CreatedAtAction(nameof(GetActorByUniqueId), new { uniqueId = createdActor.Data.UniqueId }, createdActor);
     }
 
     [HttpPut("{uniqueId}")]

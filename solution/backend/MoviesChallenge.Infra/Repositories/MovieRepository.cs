@@ -23,7 +23,8 @@ namespace MoviesChallenge.Infra.Repositories
             var query = _context.Movies
                     .Include(m => m.Actors)
                     .Include(m => m.Directors)
-                    .Include(m => m.Ratings);
+                    .Include(m => m.Ratings)
+                    .AsNoTracking();
 
             var totalCount = await query.CountAsync();
             var items = await query
@@ -52,10 +53,10 @@ namespace MoviesChallenge.Infra.Repositories
             var pattern = exactMatch ? param : $"%{param}%";
             var query = _context.Movies
             .Where(m => EF.Functions.Like(m.Title, $"%{param}%"))
-            .AsNoTracking()
             .Include(m => m.Actors)
             .Include(m => m.Ratings)
-            .Include(m => m.Directors);
+            .Include(m => m.Directors)
+            .AsNoTracking();
 
             var totalCount = await query.CountAsync();
             var items = await query

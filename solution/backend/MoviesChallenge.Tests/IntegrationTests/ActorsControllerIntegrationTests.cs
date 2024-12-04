@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MoviesChallenge.Application.Dtos;
+using MoviesChallenge.Domain.Models;
 using System.Net.Http.Json;
 
 namespace MoviesChallenge.Tests.IntegrationTests;
@@ -28,8 +29,8 @@ public class ActorsControllerIntegrationTests : IClassFixture<WebApplicationFact
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var actors = await response.Content.ReadFromJsonAsync<List<ActorDto>>();
-        Assert.NotNull(actors);
+        var actors = await response.Content.ReadFromJsonAsync<PagedResult<ActorDto>>();
+        Assert.NotNull(actors.Data);
     }
 
     [Fact]
@@ -46,11 +47,11 @@ public class ActorsControllerIntegrationTests : IClassFixture<WebApplicationFact
     public async Task SearchActors_ReturnsOkResult_WithListOfActors()
     {
         // Act
-        var response = await _client.GetAsync("/api/actors/search?name=Test");
+        var response = await _client.GetAsync("/api/actors/search?param=Test");
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var actors = await response.Content.ReadFromJsonAsync<List<ActorDto>>();
+        var actors = await response.Content.ReadFromJsonAsync<PagedResult<ActorDto>>();
         Assert.NotNull(actors);
     }
 
@@ -70,16 +71,16 @@ public class ActorsControllerIntegrationTests : IClassFixture<WebApplicationFact
         // Arrange
         var actorDto = new ActorDto { UniqueId = Guid.NewGuid(), Name = "Actor 1" };
         var result = await _authenticatedClient.PostAsJsonAsync("/api/actors", actorDto);
-        var createdActor = await result.Content.ReadFromJsonAsync<ActorDto>();
-        actorDto.UniqueId = createdActor.UniqueId;
+        var createdActor = await result.Content.ReadFromJsonAsync<Result<ActorDto>>();
+        actorDto.UniqueId = createdActor.Data.UniqueId;
 
         // Act
-        var response = await _client.GetAsync($"/api/actors/{createdActor.UniqueId}");
+        var response = await _client.GetAsync($"/api/actors/{createdActor.Data.UniqueId}");
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var returnMovie = await response.Content.ReadFromJsonAsync<ActorDto>();
-        Assert.Equal(actorDto.UniqueId, returnMovie.UniqueId);
+        var returnMovie = await response.Content.ReadFromJsonAsync<Result<ActorDto>>();
+        Assert.Equal(actorDto.UniqueId, returnMovie?.Data?.UniqueId);
     }
 
     [Fact]
@@ -104,12 +105,12 @@ public class ActorsControllerIntegrationTests : IClassFixture<WebApplicationFact
         // Arrange
         var actorDto = new ActorDto { Name = "Actor Name" };
         var result = await _authenticatedClient.PostAsJsonAsync("/api/actors", actorDto);
-        var createdActor = await result.Content.ReadFromJsonAsync<ActorDto>();
-        actorDto.UniqueId = createdActor.UniqueId;
+        var createdActor = await result.Content.ReadFromJsonAsync<Result<ActorDto>>();
+        actorDto.UniqueId = createdActor.Data.UniqueId;
         actorDto.Name = "Actor Updated";
 
         // Act
-        var response = await _authenticatedClient.PutAsJsonAsync($"/api/actors/{createdActor.UniqueId}", actorDto);
+        var response = await _authenticatedClient.PutAsJsonAsync($"/api/actors/{createdActor.Data.UniqueId}", actorDto);
 
         // Assert
         Assert.Equal(System.Net.HttpStatusCode.NoContent, response.StatusCode);
@@ -134,10 +135,10 @@ public class ActorsControllerIntegrationTests : IClassFixture<WebApplicationFact
         // Arrange
         var actorDto = new ActorDto { Name = "Actor 1" };
         var result = await _authenticatedClient.PostAsJsonAsync("/api/actors", actorDto);
-        var createdActor = await result.Content.ReadFromJsonAsync<ActorDto>();
+        var createdActor = await result.Content.ReadFromJsonAsync<Result<ActorDto>>();
 
         // Act
-        var response = await _authenticatedClient.DeleteAsync($"/api/actors/{createdActor.UniqueId}");
+        var response = await _authenticatedClient.DeleteAsync($"/api/actors/{createdActor.Data.UniqueId}");
 
         // Assert
         Assert.Equal(System.Net.HttpStatusCode.NoContent, response.StatusCode);
