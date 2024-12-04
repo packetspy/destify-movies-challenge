@@ -1,5 +1,4 @@
 using MoviesChallenge.Api.Helpers;
-using MoviesChallenge.Infra.Data;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +11,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext();
 builder.Services.AddServices();
 builder.Services.AddRepositories();
+builder.Services.AddCustomCORS();
 
 var app = builder.Build();
 
@@ -23,7 +23,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<TokenMiddleware>();
-
+app.UseCors("CORSPolicy");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();

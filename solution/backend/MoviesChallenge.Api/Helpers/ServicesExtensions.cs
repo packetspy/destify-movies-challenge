@@ -35,4 +35,21 @@ public static class ServicesExtensions
 
         return services;
     }
+
+    public static IServiceCollection AddCustomCORS(this IServiceCollection services)
+    {
+        services.AddCors(options =>
+        {
+            options.AddPolicy("CORSPolicy", builder =>
+            {
+                builder.AllowAnyHeader();
+                builder.AllowAnyMethod();
+                builder.AllowAnyOrigin();
+                builder.WithHeaders("content-type");
+                builder.WithHeaders("authorization");
+            });
+        });
+
+        return services;
+    }
 }

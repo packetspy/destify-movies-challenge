@@ -16,7 +16,7 @@ public class TokenMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         // Skip validation for safe methods GET (e.g., GetByUniqueId, Searchs)
-        if (HttpMethods.IsGet(context.Request.Method))
+        if (HttpMethods.IsGet(context.Request.Method) || HttpMethods.IsOptions(context.Request.Method))
         {
             await _next(context);
             return;
