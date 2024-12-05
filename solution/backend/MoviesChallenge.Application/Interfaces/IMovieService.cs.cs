@@ -5,7 +5,9 @@ namespace MoviesChallenge.Application.Interfaces;
 
 public interface IMovieService
 {
-    Task<PagedResult<MovieDto>> GetAllAsync(PaginationParameters paginationParams);
+    Task<IEnumerable<MovieDto>> GetAllAsync();
+
+    Task<PagedResult<MovieDto>> GetPaginatedAsync(PaginationParameters paginationParams);
 
     Task<PagedResult<MovieDto>> SearchMoviesAsync(string param, PaginationParameters paginationParams);
 

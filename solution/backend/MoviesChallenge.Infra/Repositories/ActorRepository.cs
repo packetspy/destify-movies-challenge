@@ -16,13 +16,26 @@ public class ActorRepository : IActorRepository
         _context = context;   
     }
 
-    public async Task<PagedResult<Actor>> GetAllAsync(PaginationParameters paginationParams)
+    public async Task<List<Actor>> GetAllAsync()
+    {
+        if (_context == null || _context.Actors == null)
+            throw new Exception("Invalid Database");
+
+       return await _context.Actors
+                .Include(a => a.Movies)
+                .AsNoTracking()
+                .OrderBy(a => a.Name)
+                .ToListAsync();  
+    }
+
+    public async Task<PagedResult<Actor>> GetPaginatedAsync(PaginationParameters paginationParams)
     {
         if (_context == null || _context.Actors == null)
             throw new Exception("Invalid Database");
 
         var query = _context.Actors
                 .Include(a => a.Movies)
+                .OrderBy(a => a.Name)
                 .AsNoTracking();
 
         var totalCount = await query.CountAsync();
@@ -53,6 +66,7 @@ public class ActorRepository : IActorRepository
         var query = _context.Actors
             .Where(m => EF.Functions.Like(m.Name, pattern))
             .Include(a => a.Movies)
+            .OrderBy(a => a.Name)
             .AsNoTracking();
 
         var totalCount = await query.CountAsync();

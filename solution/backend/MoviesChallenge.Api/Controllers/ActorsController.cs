@@ -17,9 +17,16 @@ public class ActorsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllActors([FromQuery] PaginationParameters paginationParams)
+    public async Task<IActionResult> GetAllActors()
     {
-        var actors = await _actorService.GetAllAsync(paginationParams);
+        var actors = await _actorService.GetAllAsync();
+        return Ok(actors);
+    }
+
+    [HttpGet("paginated")]
+    public async Task<IActionResult> GetPaginatedActors([FromQuery] PaginationParameters paginationParams)
+    {
+        var actors = await _actorService.GetPaginatedAsync(paginationParams);
         return Ok(actors);
     }
 

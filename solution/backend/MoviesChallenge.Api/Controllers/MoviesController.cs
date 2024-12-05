@@ -17,9 +17,16 @@ public class MoviesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllMovies([FromQuery] PaginationParameters paginationParams)
+    public async Task<IActionResult> GetAllMovies()
     {
-        var pagedResult = await _movieService.GetAllAsync(paginationParams);
+        var pagedResult = await _movieService.GetAllAsync();
+        return Ok(pagedResult);
+    }
+
+    [HttpGet("paginated")]
+    public async Task<IActionResult> GetPaginatedMovies([FromQuery] PaginationParameters paginationParams)
+    {
+        var pagedResult = await _movieService.GetPaginatedAsync(paginationParams);
         return Ok(pagedResult);
     }
 
@@ -41,20 +48,20 @@ public class MoviesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateMovie([FromBody] MovieDto movie)
+    public async Task<IActionResult> CreateMovie([FromBody] MovieDto movieDto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var createdMovie = await _movieService.AddAsync(movie);
+        var createdMovie = await _movieService.AddAsync(movieDto);
         return CreatedAtAction(nameof(GetMovieByUniqueId), new { uniqueId = createdMovie?.Data?.UniqueId }, createdMovie);
     }
 
     [HttpPut("{uniqueId}")]
-    public async Task<IActionResult> UpdateMovie(Guid uniqueId, [FromBody] MovieDto movie)
+    public async Task<IActionResult> UpdateMovie(Guid uniqueId, [FromBody] MovieDto movieDto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var updated = await _movieService.UpdateAsync(uniqueId, movie);
+        var updated = await _movieService.UpdateAsync(uniqueId, movieDto);
         return updated ? NoContent() : NotFound();
     }
 

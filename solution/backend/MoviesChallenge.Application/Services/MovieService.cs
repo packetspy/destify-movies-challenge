@@ -16,10 +16,30 @@ public class MovieService : IMovieService
         _movieRepository = movieRepository;
         _actorRepository = actorRepository;
     }
-    
-    public async Task<PagedResult<MovieDto>> GetAllAsync(PaginationParameters paginationParams)
+
+    public async Task<IEnumerable<MovieDto>> GetAllAsync()
     {
-        var pagedMovies = await _movieRepository.GetAllAsync(paginationParams);
+        var movies = await _movieRepository.GetAllAsync();
+        return movies.Select(m => new MovieDto
+        {
+            UniqueId = m.UniqueId,
+            Title = m.Title,
+            Country = m.Country,
+            Genre = m.Genre,
+            Language = m.Language,
+            Plot = m.Plot,
+            Poster = m.Poster,
+            Rated = m.Rated,
+            Year = m.Year,
+            Actors = m.Actors.Select(a => new ActorDto { UniqueId = a.UniqueId, Name = a.Name }).ToList(),
+            Directors = m.Directors.Select(a => new DirectorDto { UniqueId = a.UniqueId, Name = a.Name }).ToList(),
+            Ratings = m?.Ratings?.Select(r => new MovieRatingDto { Source = r.Source, Value = r.Value }).ToList()
+        });
+    }
+
+    public async Task<PagedResult<MovieDto>> GetPaginatedAsync(PaginationParameters paginationParams)
+    {
+        var pagedMovies = await _movieRepository.GetPaginatedAsync(paginationParams);
 
         return new PagedResult<MovieDto>
         {
@@ -145,7 +165,7 @@ public class MovieService : IMovieService
         var movie = await _movieRepository.GetByUniqueIdAsync(uniqueId);
         if (movie == null) return false;
 
-        movie.UniqueId = movieDto.UniqueId;
+        movie.UniqueId = uniqueId;
         movie.Title = movieDto.Title;
         movie.Country = movieDto.Country;
         movie.Genre = movieDto.Genre;

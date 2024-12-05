@@ -5,7 +5,8 @@ namespace MoviesChallenge.Domain.Interfaces;
 
 public interface IMovieRepository
 {
-    Task<PagedResult<Movie>> GetAllAsync(PaginationParameters paginationParams);
+    Task<List<Movie>> GetAllAsync();
+    Task<PagedResult<Movie>> GetPaginatedAsync(PaginationParameters paginationParams);
     Task<PagedResult<Movie>> SearchByTitleAsync(string param, PaginationParameters paginationParams, bool exactMatch = false);
     Task<Movie?> GetByUniqueIdAsync(Guid uniqueId);
     Task<Movie> AddAsync(Movie movie);

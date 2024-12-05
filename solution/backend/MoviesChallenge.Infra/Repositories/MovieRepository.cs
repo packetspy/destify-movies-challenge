@@ -15,7 +15,21 @@ namespace MoviesChallenge.Infra.Repositories
             _context = context;
         }
 
-        public async Task<PagedResult<Movie>> GetAllAsync(PaginationParameters paginationParams)
+        public async Task<List<Movie>> GetAllAsync()
+        {
+            if (_context == null || _context.Movies == null)
+                throw new Exception("Invalid Database");
+
+            return await _context.Movies
+                    .Include(m => m.Actors)
+                    .Include(m => m.Directors)
+                    .Include(m => m.Ratings)
+                    .AsNoTracking()
+                    .OrderBy(m => m.Title)
+                    .ToListAsync();
+        }
+
+        public async Task<PagedResult<Movie>> GetPaginatedAsync(PaginationParameters paginationParams)
         {
             if (_context == null || _context.Movies == null)
                 throw new Exception("Invalid Database");
@@ -24,7 +38,8 @@ namespace MoviesChallenge.Infra.Repositories
                     .Include(m => m.Actors)
                     .Include(m => m.Directors)
                     .Include(m => m.Ratings)
-                    .AsNoTracking();
+                    .AsNoTracking()
+                    .OrderBy(m => m.Title);
 
             var totalCount = await query.CountAsync();
             var items = await query
@@ -56,7 +71,8 @@ namespace MoviesChallenge.Infra.Repositories
             .Include(m => m.Actors)
             .Include(m => m.Ratings)
             .Include(m => m.Directors)
-            .AsNoTracking();
+            .AsNoTracking()
+            .OrderBy(m => m.Title);
 
             var totalCount = await query.CountAsync();
             var items = await query

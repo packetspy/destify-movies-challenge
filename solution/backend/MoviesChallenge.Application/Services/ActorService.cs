@@ -17,9 +17,32 @@ public class ActorService : IActorService
         _movieRepository = movieRepository;
     }
 
-    public async Task<PagedResult<ActorDto>> GetAllAsync(PaginationParameters paginationParams)
+    public async Task<IEnumerable<ActorDto>> GetAllAsync()
     {
-        var pagedActors = await _actorRepository.GetAllAsync(paginationParams);
+        var actors = await _actorRepository.GetAllAsync();
+
+        return actors.Select(a => new ActorDto
+        {
+            UniqueId = a.UniqueId,
+            Name = a.Name,
+            Movies = a?.Movies?.Select(m => new MovieDto
+            {
+                UniqueId = m.UniqueId,
+                Title = m.Title,
+                Country = m.Country,
+                Genre = m.Genre,
+                Language = m.Language,
+                Plot = m.Plot,
+                Poster = m.Poster,
+                Rated = m.Rated,
+                Year = m.Year,
+            }).ToList()
+        });
+    }
+
+    public async Task<PagedResult<ActorDto>> GetPaginatedAsync(PaginationParameters paginationParams)
+    {
+        var pagedActors = await _actorRepository.GetPaginatedAsync(paginationParams);
         return new PagedResult<ActorDto>
         {
             Data = pagedActors?.Data?.Select(a => new ActorDto
@@ -48,6 +71,7 @@ public class ActorService : IActorService
             } : new PagedMetadata { Page = 1, PageSize = 1, TotalCount = 1, TotalPages = 1 }
         };
     }
+
     public async Task<PagedResult<ActorDto>> SearchActorsAsync(string param, PaginationParameters paginationParams)
     {
         var pagedActors = await _actorRepository.SearchByNameAsync(param, paginationParams);

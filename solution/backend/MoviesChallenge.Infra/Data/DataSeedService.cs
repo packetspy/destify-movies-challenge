@@ -11,9 +11,6 @@ public class DataSeedService : IDataSeedService
 {
     private readonly MovieDbContext _context;
     private static List<RawDataDto> moviesList = new List<RawDataDto>();
-    private static HashSet<Actor> actorsList = new HashSet<Actor>();
-    private static HashSet<Director> directorsList = new HashSet<Director>();
-    private static HashSet<Movie> movieList = new HashSet<Movie>();
 
     public DataSeedService(MovieDbContext context)
     {
@@ -39,7 +36,7 @@ public class DataSeedService : IDataSeedService
                         .Include(m => m.Actors)
                         .Include(m => m.Directors)
                         .Include(m => m.Ratings)
-                        .FirstOrDefaultAsync(m => m.Title == movieData.Title && m.Year == Convert.ToInt32(movieData.Year));
+                        .FirstOrDefaultAsync(m => m.Title == movieData.Title.Trim() && m.Year == Convert.ToInt32(movieData.Year));
 
                     if (existingMovie == null)
                     {
@@ -55,24 +52,26 @@ public class DataSeedService : IDataSeedService
                             Poster = movieData.Poster
                         };
 
-                        foreach (var actorName in movieData.Actors.Split(", "))
+                        foreach (var actorName in movieData.Actors.Split(","))
                         {
-                            var actor = await _context.Actors.FirstOrDefaultAsync(a => a.Name == actorName);
+                            var actor = await _context.Actors.FirstOrDefaultAsync(a => a.Name == actorName.Trim());
                             if (actor == null)
                             {
-                                actor = new Actor { Name = actorName };
+                                actor = new Actor { Name = actorName.Trim() };
                                 _context.Actors.Add(actor);
+                                await _context.SaveChangesAsync();
                             }
                             movie.Actors.Add(actor);
                         }
 
-                        foreach (var directorName in movieData.Director.Split(", "))
+                        foreach (var directorName in movieData.Director.Split(","))
                         {
                             var director = await _context.Directors.FirstOrDefaultAsync(d => d.Name == directorName);
                             if (director == null)
                             {
                                 director = new Director { Name = directorName };
                                 _context.Directors.Add(director);
+                                await _context.SaveChangesAsync();
                             }
                             movie.Directors.Add(director);
                         }
@@ -87,12 +86,10 @@ public class DataSeedService : IDataSeedService
                         }
 
                         _context.Movies.Add(movie);
+                        await _context.SaveChangesAsync();
                     }
                 }
-
-                await _context.SaveChangesAsync();
             }
         }
     }
-
 }
