@@ -1,4 +1,4 @@
-import { ContentLayout } from '@/components/layouts';
+import { ContentLayout } from '@/components/layouts'
 
 export const DashboardRoute = () => {
   return (
@@ -11,5 +11,5 @@ export const DashboardRoute = () => {
       </h4>
       <p className="font-medium">In this application you can:</p>
     </ContentLayout>
-  );
-};
+  )
+}

@@ -6,5 +6,5 @@ public class ActorDto
 
     public string? Name { get; set; }
 
-    public List<MovieDto>? Movies { get; set; } = [];
+    public List<MovieDto>? Movies { get; set; } = new List<MovieDto>();
 }

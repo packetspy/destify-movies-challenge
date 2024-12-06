@@ -178,7 +178,9 @@ public class MovieService : IMovieService
         movie.Directors = await GetDirectors(movieDto.Directors);
         movie.Ratings = movieDto.Ratings.Select(r => new MovieRating { Source = r.Source, Value = r.Value }).ToList();
 
-        return await _movieRepository.UpdateAsync(movie);
+        var update = await _movieRepository.UpdateAsync(movie);
+
+        return update;
     }
 
     public async Task<bool> DeleteAsync(Guid uniqueId)
@@ -188,7 +190,7 @@ public class MovieService : IMovieService
 
     private async Task<List<Actor>> GetActors(List<ActorDto> actors)
     {
-        HashSet<Actor> listActors = [];
+        HashSet<Actor> listActors = new HashSet<Actor>();
         if (actors == null) return new List<Actor>();
 
         foreach (var actor in actors)
@@ -205,7 +207,7 @@ public class MovieService : IMovieService
 
     private async Task<List<Director>> GetDirectors(List<DirectorDto> directors)
     {
-        HashSet<Director> listDirectors = [];
+        HashSet<Director> listDirectors = new HashSet<Director>();
         if (directors == null) return new List<Director>();
 
         foreach (var director in directors)

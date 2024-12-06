@@ -29,8 +29,8 @@ public class ActorsControllerIntegrationTests : IClassFixture<WebApplicationFact
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var actors = await response.Content.ReadFromJsonAsync<PagedResult<ActorDto>>();
-        Assert.NotNull(actors.Data);
+        var actors = await response.Content.ReadFromJsonAsync<List<ActorDto>>();
+        Assert.NotNull(actors);
     }
 
     [Fact]

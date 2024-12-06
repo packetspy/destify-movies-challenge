@@ -180,6 +180,7 @@ type FormProps<TFormValues extends FieldValues, Schema> = {
 };
 
 const Form = <
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Schema extends ZodType<any, any, any>,
   TFormValues extends FieldValues = z.infer<Schema>,
 >({

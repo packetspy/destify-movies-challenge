@@ -18,9 +18,9 @@ public class Movie : BaseModel
 
     public string? Poster { get; set; }
 
-    public List<Actor> Actors { get; set; } = [];
+    public List<Actor> Actors { get; set; } = new List<Actor>();
 
-    public List<Director> Directors { get; set; } = [];
+    public List<Director> Directors { get; set; } = new List<Director>();
 
-    public List<MovieRating>? Ratings { get; set; } = [];
+    public List<MovieRating>? Ratings { get; set; } = new List<MovieRating>();
 }

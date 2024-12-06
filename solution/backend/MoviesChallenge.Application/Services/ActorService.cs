@@ -168,7 +168,7 @@ public class ActorService : IActorService
 
     private async Task<List<Movie>> GetMovies(List<MovieDto> movies)
     {
-        HashSet<Movie> listMovies = [];
+        HashSet<Movie> listMovies = new HashSet<Movie>();
         if (movies == null) return new List<Movie>();
 
         foreach (var movie in movies)

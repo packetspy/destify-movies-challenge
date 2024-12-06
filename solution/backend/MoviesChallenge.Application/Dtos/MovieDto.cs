@@ -24,5 +24,5 @@ public class MovieDto
 
     public List<DirectorDto>? Directors { get; set; }
 
-    public List<MovieRatingDto>? Ratings { get; set; } = [];
+    public List<MovieRatingDto>? Ratings { get; set; } = new List<MovieRatingDto>();
 }

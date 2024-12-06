@@ -95,6 +95,7 @@ public class ActorRepository : IActorRepository
 
         var actor = await _context.Actors
                 .Include(a => a.Movies)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.UniqueId == uniqueId);
 
         return actor;
@@ -115,13 +116,24 @@ public class ActorRepository : IActorRepository
         if (_context == null || _context.Actors == null)
             throw new Exception("Invalid Database");
 
-        var originalActor = await _context.Actors.FirstOrDefaultAsync(x => x.UniqueId == actor.UniqueId);
-        if (originalActor == null)
+        var existingActor = await _context.Actors
+            .Include(a => a.Movies)
+            .FirstOrDefaultAsync(x => x.UniqueId == actor.UniqueId);
+
+        if (existingActor == null)
             return false;
 
-        actor.Id = originalActor.Id;
-        var model = _context.Actors.Update(actor);
-        bool updated = model.State == EntityState.Modified;
+        existingActor.Name = actor.Name;
+
+        existingActor.Movies.Clear();
+        foreach (var movie in actor.Movies)
+        {
+            var existingMovie = await _context.Movies.FirstOrDefaultAsync(d => d.UniqueId == movie.UniqueId) ?? new Movie { Title = movie.Title };
+            existingActor.Movies.Add(existingMovie);
+        }
+
+        var model = _context.Actors.Update(existingActor);
+        bool updated = model?.State == EntityState.Modified;
         await _context.SaveChangesAsync();
 
         return updated;

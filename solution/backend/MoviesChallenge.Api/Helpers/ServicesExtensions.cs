@@ -23,15 +23,17 @@ public static class ServicesExtensions
 
     public static IServiceCollection AddServices(this IServiceCollection services)
     {
-        services.AddScoped<IMovieService, MovieService>();
         services.AddScoped<IActorService, ActorService>();
+        services.AddScoped<IDirectorService, DirectorService>();
+        services.AddScoped<IMovieService, MovieService>();
         return services;
     }
 
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
-        services.AddScoped<IMovieRepository, MovieRepository>();
         services.AddScoped<IActorRepository, ActorRepository>();
+        services.AddScoped<IDirectorRepository, DirectorRepository>();
+        services.AddScoped<IMovieRepository, MovieRepository>();
 
         return services;
     }

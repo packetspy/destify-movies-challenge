@@ -1,0 +1,25 @@
+services:
+  destify-api:
+    image: destify-api
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    environment:
+      - Logging__LogLevel__Default=Information
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - '5051:80'
+
+  destify-app:
+    image: destify-app
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+      args:
+        VITE_BASE_URL: http://localhost:5051/api
+    ports:
+      - '5050:80'
+    depends_on:
+      - destify-api
