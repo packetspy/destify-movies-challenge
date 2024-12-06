@@ -6,8 +6,7 @@ namespace MoviesChallenge.Domain.Interfaces;
 public interface IActorRepository
 {
     Task<List<Actor>> GetAllAsync();
-    Task<PagedResult<Actor>> GetPaginatedAsync(PaginationParameters paginationParams);
-    Task<PagedResult<Actor>> SearchByNameAsync(string name, PaginationParameters paginationParams, bool exactMatch = false);
+    Task<PagedResult<Actor>> GetPaginatedAsync(string? param, PaginationParameters paginationParams, bool exactMatch = false);
     Task<Actor?> GetByUniqueIdAsync(Guid uniqueId);
     Task<Actor> AddAsync(Actor actor);
     Task<bool> UpdateAsync(Actor actor);

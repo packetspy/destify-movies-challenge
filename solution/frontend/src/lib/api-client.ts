@@ -1,42 +1,37 @@
-import Axios, { InternalAxiosRequestConfig } from 'axios';
-import { useNotifications } from '@/components/ui/notifications';
-import { paths } from '@/config/paths';
+import Axios, { InternalAxiosRequestConfig } from 'axios'
+import { useNotifications } from '@/components/ui/notifications'
+import { paths } from '@/config/paths'
 
 function authRequestInterceptor(config: InternalAxiosRequestConfig) {
-  if (config.headers)
-    config.headers.Accept = 'application/json';
-      
+  if (config.headers) config.headers.Accept = 'application/json'
+
   if (config.method !== 'get') {
-    const secretKey = import.meta.env.VITE_SECRET_KEY;
-    config.headers.Authorization = `Bearer ${secretKey}`;
+    const secretKey = import.meta.env.VITE_SECRET_KEY
+    config.headers.Authorization = `Bearer ${secretKey}`
   }
-  return config;
+  return config
 }
 
 const url = import.meta.env.VITE_BASE_URL
 export const api = Axios.create({
-  baseURL: url,
-});
+  baseURL: url
+})
 
-api.interceptors.request.use(authRequestInterceptor);
+api.interceptors.request.use(authRequestInterceptor)
 api.interceptors.response.use(
   (response) => {
-    return response.data;
+    return response.data
   },
   (error) => {
-    const message = error.response?.data?.message || error.message;
+    const message = error.response?.data?.message || error.message
     useNotifications.getState().addNotification({
       type: 'error',
       title: 'Error',
-      message,
-    });
+      message
+    })
 
-    if (error.response?.status === 401) {
-      //const searchParams = new URLSearchParams();
-      //const redirectTo = searchParams.get('redirectTo') || window.location.pathname;
-      window.location.href = paths.app.dashboard.getHref();
-    }
+    if (error.response?.status === 401) window.location.href = paths.app.root.getHref()
 
-    return Promise.reject(error);
-  },
-);
+    return Promise.reject(error)
+  }
+)

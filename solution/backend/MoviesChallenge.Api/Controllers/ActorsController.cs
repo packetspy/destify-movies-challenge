@@ -24,19 +24,9 @@ public class ActorsController : ControllerBase
     }
 
     [HttpGet("paginated")]
-    public async Task<IActionResult> GetPaginatedActors([FromQuery] PaginationParameters paginationParams)
+    public async Task<IActionResult> GetPaginatedActors([FromQuery] string? query, [FromQuery] PaginationParameters paginationParams)
     {
-        var actors = await _actorService.GetPaginatedAsync(paginationParams);
-        return Ok(actors);
-    }
-
-    [HttpGet("search")]
-    public async Task<IActionResult> SearchActors([FromQuery] string param, [FromQuery] PaginationParameters paginationParams)
-    {
-        if (string.IsNullOrWhiteSpace(param))
-            return BadRequest("Actor name is required for search.");
-
-        var actors = await _actorService.SearchActorsAsync(param, paginationParams);
+        var actors = await _actorService.GetPaginatedAsync(query, paginationParams);
         return Ok(actors);
     }
 

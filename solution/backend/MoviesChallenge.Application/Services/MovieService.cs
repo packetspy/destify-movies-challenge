@@ -10,11 +10,13 @@ public class MovieService : IMovieService
 {
     private readonly IMovieRepository _movieRepository;
     private readonly IActorRepository _actorRepository;
+    private readonly IRatingRepository _ratingRepository;
 
-    public MovieService(IMovieRepository movieRepository, IActorRepository actorRepository)
+    public MovieService(IMovieRepository movieRepository, IActorRepository actorRepository, IRatingRepository ratingRepository)
     {
         _movieRepository = movieRepository;
         _actorRepository = actorRepository;
+        _ratingRepository = ratingRepository;
     }
 
     public async Task<IEnumerable<MovieDto>> GetAllAsync()
@@ -37,40 +39,10 @@ public class MovieService : IMovieService
         });
     }
 
-    public async Task<PagedResult<MovieDto>> GetPaginatedAsync(PaginationParameters paginationParams)
+    public async Task<PagedResult<MovieDto>> GetPaginatedAsync(string? param, PaginationParameters paginationParams)
     {
-        var pagedMovies = await _movieRepository.GetPaginatedAsync(paginationParams);
+        var pagedMovies = await _movieRepository.GetPaginatedAsync(param, paginationParams);
 
-        return new PagedResult<MovieDto>
-        {
-            Data = pagedMovies?.Data?.Select(m => new MovieDto
-            {
-                UniqueId = m.UniqueId,
-                Title = m.Title,
-                Country = m.Country,
-                Genre = m.Genre,
-                Language = m.Language,
-                Plot = m.Plot,
-                Poster = m.Poster,
-                Rated = m.Rated,
-                Year = m.Year,
-                Actors = m.Actors.Select(a => new ActorDto { UniqueId = a.UniqueId, Name = a.Name }).ToList(),
-                Directors = m.Directors.Select(a => new DirectorDto { UniqueId = a.UniqueId, Name = a.Name }).ToList(),
-                Ratings = m?.Ratings?.Select(r => new MovieRatingDto { Source = r.Source, Value = r.Value }).ToList()
-            }),
-            Meta = pagedMovies?.Meta != null ? new PagedMetadata
-            {
-                Page = paginationParams.Page,
-                PageSize = paginationParams.PageSize,
-                TotalCount = pagedMovies.Meta.TotalCount,
-                TotalPages = pagedMovies.Meta.TotalPages
-            } : new PagedMetadata { Page = 1, PageSize = 1, TotalCount = 1, TotalPages = 1 }
-        };
-    }
-
-    public async Task<PagedResult<MovieDto>> SearchMoviesAsync(string param, PaginationParameters paginationParams)
-    {
-        var pagedMovies = await _movieRepository.SearchByTitleAsync(param, paginationParams);
         return new PagedResult<MovieDto>
         {
             Data = pagedMovies?.Data?.Select(m => new MovieDto
@@ -136,7 +108,7 @@ public class MovieService : IMovieService
             Year = movieDto.Year,
             Actors = await GetActors(movieDto.Actors),
             Directors = await GetDirectors(movieDto.Directors),
-            Ratings = movieDto.Ratings.Select(r => new MovieRating { Source = r.Source, Value = r.Value }).ToList()
+            Ratings = await GetRatings(movieDto.Ratings, 0)
         };
 
         var addedMovie = await _movieRepository.AddAsync(movie);
@@ -176,9 +148,10 @@ public class MovieService : IMovieService
         movie.Year = movieDto.Year;
         movie.Actors = await GetActors(movieDto.Actors);
         movie.Directors = await GetDirectors(movieDto.Directors);
-        movie.Ratings = movieDto.Ratings.Select(r => new MovieRating { Source = r.Source, Value = r.Value }).ToList();
+        movie.Ratings = await GetRatings(movieDto.Ratings, movie.Id);
 
-        return await _movieRepository.UpdateAsync(movie);
+        var update = await _movieRepository.UpdateAsync(movie);
+        return update;
     }
 
     public async Task<bool> DeleteAsync(Guid uniqueId)
@@ -188,12 +161,12 @@ public class MovieService : IMovieService
 
     private async Task<List<Actor>> GetActors(List<ActorDto> actors)
     {
-        HashSet<Actor> listActors = [];
+        HashSet<Actor> listActors = new HashSet<Actor>();
         if (actors == null) return new List<Actor>();
 
         foreach (var actor in actors)
         {
-            var result = (await _actorRepository.SearchByNameAsync(actor.Name, new PaginationParameters { Page = 1, PageSize = 100 }, true)).Data?.FirstOrDefault();
+            var result = (await _actorRepository.GetPaginatedAsync(actor.Name, new PaginationParameters { Page = 1, PageSize = 1 }, true)).Data?.FirstOrDefault();
             if (result == null)
                 listActors.Add(new Actor { Name = actor.Name });
             else
@@ -205,12 +178,12 @@ public class MovieService : IMovieService
 
     private async Task<List<Director>> GetDirectors(List<DirectorDto> directors)
     {
-        HashSet<Director> listDirectors = [];
+        HashSet<Director> listDirectors = new HashSet<Director>();
         if (directors == null) return new List<Director>();
 
         foreach (var director in directors)
         {
-            var result = (await _actorRepository.SearchByNameAsync(director.Name, new PaginationParameters { Page = 1, PageSize = 100 }, true)).Data?.FirstOrDefault();
+            var result = (await _actorRepository.GetPaginatedAsync(director.Name, new PaginationParameters { Page = 1, PageSize = 1 }, true)).Data?.FirstOrDefault();
             if (result == null)
                 listDirectors.Add(new Director { Name = director.Name });
             else
@@ -218,5 +191,22 @@ public class MovieService : IMovieService
         }
 
         return listDirectors.ToList();
+    }
+
+    private async Task<List<MovieRating>> GetRatings(List<MovieRatingDto> ratings, int movieId)
+    {
+        HashSet<MovieRating> listRatings = new HashSet<MovieRating>();
+        if (ratings == null) return new List<MovieRating>();
+
+        foreach (var rating in ratings)
+        {
+            var result = await _ratingRepository.GetBySourceAndValue(rating.Source, rating.Value);
+            if (result == null)
+                listRatings.Add(new MovieRating { MovieId = movieId, Source = rating.Source, Value = rating.Value });
+            else
+                listRatings.Add(new MovieRating { Id = result.Id, UniqueId = result.UniqueId, MovieId = movieId, Source = result.Source, Value = result.Value });
+        }
+
+        return listRatings.ToList();
     }
 }

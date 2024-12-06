@@ -1,25 +1,19 @@
-import { QueryClient } from '@tanstack/react-query';
-import { LoaderFunctionArgs } from 'react-router-dom';
+import { QueryClient } from '@tanstack/react-query'
+import { LoaderFunctionArgs } from 'react-router-dom'
 
-import { ContentLayout } from '@/components/layouts';
-import { getMoviesQueryOptions } from '@/features/movies/api/get-movies';
-import { CreateMovie } from '@/features/movies/components/create-movie';
-import { MoviesList } from '@/features/movies/components/movies-list';
+import { ContentLayout } from '@/components/layouts'
+import { getMoviesQueryOptions } from '@/features/movies/api/get-movies'
+import { MoviesList } from '@/features/movies/components/movies-list'
+import { CreateMovie } from '@/features/movies/components/create-movie'
 
 export const moviesLoader =
   (queryClient: QueryClient) =>
   async ({ request }: LoaderFunctionArgs) => {
-    const url = new URL(request.url);
-
-    const page = Number(url.searchParams.get('page') || 1);
-
-    const query = getMoviesQueryOptions({ page });
-
-    return (
-      queryClient.getQueryData(query.queryKey) ??
-      (await queryClient.fetchQuery(query))
-    );
-  };
+    const url = new URL(request.url)
+    const page = Number(url.searchParams.get('page') || 1)
+    const query = getMoviesQueryOptions({ page })
+    return queryClient.getQueryData(query.queryKey)
+  }
 
 export const MovieRoute = () => {
   return (
@@ -28,8 +22,8 @@ export const MovieRoute = () => {
         <CreateMovie />
       </div>
       <div className="mt-4">
-        <MoviesList/>
+        <MoviesList />
       </div>
     </ContentLayout>
-  );
-};
+  )
+}

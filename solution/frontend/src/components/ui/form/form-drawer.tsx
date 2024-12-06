@@ -1,8 +1,8 @@
-import * as React from 'react';
+import * as React from 'react'
 
-import { useDisclosure } from '@/hooks/use-disclosure';
+import { useDisclosure } from '@/hooks/use-disclosure'
 
-import { Button } from '../button';
+import { Button } from '../button'
 import {
   Drawer,
   DrawerClose,
@@ -10,45 +10,45 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTrigger,
-  DrawerTitle,
-} from '../drawer';
+  DrawerTitle
+} from '../drawer'
 
 type FormDrawerProps = {
-  isDone: boolean;
-  triggerButton: React.ReactElement;
-  submitButton: React.ReactElement;
-  title: string;
-  children: React.ReactNode;
-};
+  isDone: boolean
+  triggerButton: React.ReactElement
+  submitButton: React.ReactElement
+  title: string
+  children: React.ReactNode
+}
 
 export const FormDrawer = ({
   title,
   children,
   isDone,
   triggerButton,
-  submitButton,
+  submitButton
 }: FormDrawerProps) => {
-  const { close, open, isOpen } = useDisclosure();
+  const { close, open, isOpen } = useDisclosure()
 
   React.useEffect(() => {
     if (isDone) {
-      close();
+      close()
     }
-  }, [isDone, close]);
+  }, [isDone, close])
 
   return (
     <Drawer
       open={isOpen}
       onOpenChange={(isOpen) => {
         if (!isOpen) {
-          close();
+          close()
         } else {
-          open();
+          open()
         }
       }}
     >
       <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
-      <DrawerContent className="flex max-w-[800px] flex-col justify-between sm:max-w-[540px]">
+      <DrawerContent className="flex max-w-[800px] flex-col justify-between sm:max-w-[540px] overflow-auto">
         <div className="flex flex-col">
           <DrawerHeader>
             <DrawerTitle>{title}</DrawerTitle>
@@ -65,5 +65,5 @@ export const FormDrawer = ({
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
-  );
-};
+  )
+}

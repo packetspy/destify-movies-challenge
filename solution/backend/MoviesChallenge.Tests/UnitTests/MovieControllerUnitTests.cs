@@ -24,25 +24,15 @@ public class MoviesControllerUnitTests
     {
         // Arrange
         var movies = new List<MovieDto> { new MovieDto { UniqueId = Guid.NewGuid(), Title = "Test Movie" } };
-        _mockMovieService.Setup(service => service.GetAllAsync(It.IsAny<PaginationParameters>()))
-                   .ReturnsAsync(new PagedResult<MovieDto>
-                   {
-                       Data = movies.Skip(0).Take(10),
-                       Meta = new PagedMetadata
-                       {
-                           TotalCount = movies.Count,
-                           Page = 1,
-                           PageSize = 10
-                       }
-                   });
+        _mockMovieService.Setup(service => service.GetAllAsync()).ReturnsAsync(movies);
 
         // Act
-        var result = await _controller.GetAllMovies(paginationParams);
+        var result = await _controller.GetAllMovies();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnMovies = Assert.IsType<PagedResult<MovieDto>>(okResult.Value);
-        Assert.Single(returnMovies.Data);
+        var returnMovies = Assert.IsType<List<MovieDto>>(okResult.Value);
+        Assert.Single(returnMovies);
     }
 
     [Fact]

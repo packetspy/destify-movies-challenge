@@ -160,7 +160,7 @@ export const Table = <Entry extends BaseEntity>({
         </TableHeader>
         <TableBody>
           {data.map((entry, entryIndex) => (
-            <TableRow key={entry?.id || entryIndex}>
+            <TableRow key={entry?.uniqueId || entryIndex}>
               {columns.map(({ Cell, field, title }, columnIndex) => (
                 <TableCell key={title + columnIndex}>
                   {Cell ? <Cell entry={entry} /> : `${entry[field]}`}

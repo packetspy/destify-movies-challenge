@@ -40,9 +40,9 @@ public class ActorService : IActorService
         });
     }
 
-    public async Task<PagedResult<ActorDto>> GetPaginatedAsync(PaginationParameters paginationParams)
+    public async Task<PagedResult<ActorDto>> GetPaginatedAsync(string? param, PaginationParameters paginationParams)
     {
-        var pagedActors = await _actorRepository.GetPaginatedAsync(paginationParams);
+        var pagedActors = await _actorRepository.GetPaginatedAsync(param, paginationParams);
         return new PagedResult<ActorDto>
         {
             Data = pagedActors?.Data?.Select(a => new ActorDto
@@ -74,7 +74,7 @@ public class ActorService : IActorService
 
     public async Task<PagedResult<ActorDto>> SearchActorsAsync(string param, PaginationParameters paginationParams)
     {
-        var pagedActors = await _actorRepository.SearchByNameAsync(param, paginationParams);
+        var pagedActors = await _actorRepository.GetPaginatedAsync(param, paginationParams);
         return new PagedResult<ActorDto>
         {
             Data = pagedActors?.Data?.Select(a => new ActorDto
@@ -168,12 +168,12 @@ public class ActorService : IActorService
 
     private async Task<List<Movie>> GetMovies(List<MovieDto> movies)
     {
-        HashSet<Movie> listMovies = [];
+        HashSet<Movie> listMovies = new HashSet<Movie>();
         if (movies == null) return new List<Movie>();
 
         foreach (var movie in movies)
         {
-            var result = (await _movieRepository.SearchByTitleAsync(movie.Title, new PaginationParameters { Page = 1, PageSize = 100 }, true)).Data?.FirstOrDefault();
+            var result = (await _movieRepository.GetPaginatedAsync(movie.Title, new PaginationParameters { Page = 1, PageSize = 100 }, true)).Data?.FirstOrDefault();
             if (result == null)
                 listMovies.Add(new Movie { Title = movie.Title });
             else

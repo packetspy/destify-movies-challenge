@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using MoviesChallenge.Application.Interfaces;
 using MoviesChallenge.Application.Services;
 using MoviesChallenge.Domain.Interfaces;
@@ -23,15 +24,18 @@ public static class ServicesExtensions
 
     public static IServiceCollection AddServices(this IServiceCollection services)
     {
-        services.AddScoped<IMovieService, MovieService>();
         services.AddScoped<IActorService, ActorService>();
+        services.AddScoped<IDirectorService, DirectorService>();
+        services.AddScoped<IMovieService, MovieService>();
         return services;
     }
 
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
-        services.AddScoped<IMovieRepository, MovieRepository>();
         services.AddScoped<IActorRepository, ActorRepository>();
+        services.AddScoped<IDirectorRepository, DirectorRepository>();
+        services.AddScoped<IMovieRepository, MovieRepository>();
+        services.AddScoped<IRatingRepository, RatingRepository>();
 
         return services;
     }
@@ -47,6 +51,41 @@ public static class ServicesExtensions
                 builder.AllowAnyOrigin();
                 builder.WithHeaders("content-type");
                 builder.WithHeaders("authorization");
+            });
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddCustomSwagger(this IServiceCollection services)
+    {
+        services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Movies Challenge", Version = "v1" });
+
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Description = "JWT Authorization Header",
+                Name = "Authorization",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+            });
+
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
             });
         });
 

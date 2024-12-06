@@ -179,7 +179,7 @@ export const TablePagination = ({
         )}
         {currentPage < totalPages && (
           <PaginationItem>
-            <PaginationNext href={createHref(totalPages)} />
+            <PaginationNext href={createHref(currentPage + 1)} />
           </PaginationItem>
         )}
       </PaginationContent>

@@ -22,7 +22,7 @@ export const Info: Story = {
       title: 'Hello Info',
       message: 'This is info notification',
     },
-    onDismiss: (id) => alert(`Dismissing Notification with id: ${id}`),
+    onDismiss: (id: string) => alert(`Dismissing Notification with id: ${id}`),
   },
 };
 
@@ -34,7 +34,7 @@ export const Success: Story = {
       title: 'Hello Success',
       message: 'This is success notification',
     },
-    onDismiss: (id) => alert(`Dismissing Notification with id: ${id}`),
+    onDismiss: (id: string) => alert(`Dismissing Notification with id: ${id}`),
   },
 };
 
@@ -46,7 +46,7 @@ export const Warning: Story = {
       title: 'Hello Warning',
       message: 'This is warning notification',
     },
-    onDismiss: (id) => alert(`Dismissing Notification with id: ${id}`),
+    onDismiss: (id: string) => alert(`Dismissing Notification with id: ${id}`),
   },
 };
 
@@ -58,6 +58,6 @@ export const Error: Story = {
       title: 'Hello Error',
       message: 'This is error notification',
     },
-    onDismiss: (id) => alert(`Dismissing Notification with id: ${id}`),
+    onDismiss: (id: string) => alert(`Dismissing Notification with id: ${id}`),
   },
 };

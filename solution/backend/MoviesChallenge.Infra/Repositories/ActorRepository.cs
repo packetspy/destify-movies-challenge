@@ -3,6 +3,8 @@ using MoviesChallenge.Domain.Entities;
 using MoviesChallenge.Domain.Interfaces;
 using MoviesChallenge.Domain.Models;
 using MoviesChallenge.Infra.Data;
+using System.IO;
+using System.Xml.Linq;
 
 namespace MoviesChallenge.Infra.Repositories;
 
@@ -28,12 +30,13 @@ public class ActorRepository : IActorRepository
                 .ToListAsync();  
     }
 
-    public async Task<PagedResult<Actor>> GetPaginatedAsync(PaginationParameters paginationParams)
+    public async Task<PagedResult<Actor>> GetPaginatedAsync(string? param, PaginationParameters paginationParams, bool exactMatch = false)
     {
         if (_context == null || _context.Actors == null)
             throw new Exception("Invalid Database");
-
+        var pattern = exactMatch ? param : $"%{param}%";
         var query = _context.Actors
+                .Where(m => EF.Functions.Like(m.Name, pattern))
                 .Include(a => a.Movies)
                 .OrderBy(a => a.Name)
                 .AsNoTracking();
@@ -57,37 +60,6 @@ public class ActorRepository : IActorRepository
         };
     }
 
-    public async Task<PagedResult<Actor>> SearchByNameAsync(string name, PaginationParameters paginationParams, bool exactMatch = false)
-    {
-        if (_context == null || _context.Actors == null)
-            throw new Exception("Invalid Database");
-
-        var pattern = exactMatch ? name : $"%{name}%";
-        var query = _context.Actors
-            .Where(m => EF.Functions.Like(m.Name, pattern))
-            .Include(a => a.Movies)
-            .OrderBy(a => a.Name)
-            .AsNoTracking();
-
-        var totalCount = await query.CountAsync();
-        var items = await query
-           .Skip((paginationParams.Page - 1) * paginationParams.PageSize)
-           .Take(paginationParams.PageSize)
-           .ToListAsync();
-
-        return new PagedResult<Actor>
-        {
-            Data = items,
-            Meta = new PagedMetadata
-            {
-                TotalCount = totalCount,
-                TotalPages = (int)Math.Ceiling(totalCount / (double)paginationParams.PageSize),
-                Page = paginationParams.Page,
-                PageSize = paginationParams.PageSize
-            }
-        };
-    }
-
     public async Task<Actor?> GetByUniqueIdAsync(Guid uniqueId)
     {
         if (_context == null || _context.Actors == null)
@@ -95,6 +67,7 @@ public class ActorRepository : IActorRepository
 
         var actor = await _context.Actors
                 .Include(a => a.Movies)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.UniqueId == uniqueId);
 
         return actor;
@@ -104,6 +77,20 @@ public class ActorRepository : IActorRepository
     {
         if (_context == null || _context.Actors == null)
             throw new Exception("Invalid Database");
+
+        if (actor.Movies.Count > 0)
+        {
+            HashSet<Movie> movieSet = new HashSet<Movie>();
+            foreach (var movie in actor.Movies)
+            {
+                var existntMovie = await _context?.Movies?.FirstOrDefaultAsync(x => x.UniqueId == movie.UniqueId);
+                if (existntMovie != null)
+                    movieSet.Add(existntMovie);
+            }
+
+            actor.Movies.Clear();
+            actor.Movies = movieSet.ToList();
+        }
 
         var model = await _context.Actors.AddAsync(actor);
         await _context.SaveChangesAsync();
@@ -115,13 +102,24 @@ public class ActorRepository : IActorRepository
         if (_context == null || _context.Actors == null)
             throw new Exception("Invalid Database");
 
-        var originalActor = await _context.Actors.FirstOrDefaultAsync(x => x.UniqueId == actor.UniqueId);
-        if (originalActor == null)
+        var existingActor = await _context.Actors
+            .Include(a => a.Movies)
+            .FirstOrDefaultAsync(x => x.UniqueId == actor.UniqueId);
+
+        if (existingActor == null)
             return false;
 
-        actor.Id = originalActor.Id;
-        var model = _context.Actors.Update(actor);
-        bool updated = model.State == EntityState.Modified;
+        existingActor.Name = actor.Name;
+
+        existingActor.Movies.Clear();
+        foreach (var movie in actor.Movies)
+        {
+            var existingMovie = await _context.Movies.FirstOrDefaultAsync(d => d.UniqueId == movie.UniqueId) ?? new Movie { Title = movie.Title };
+            existingActor.Movies.Add(existingMovie);
+        }
+
+        var model = _context.Actors.Update(existingActor);
+        bool updated = model?.State == EntityState.Modified;
         await _context.SaveChangesAsync();
 
         return updated;

@@ -1,80 +1,75 @@
-import { Home, PanelLeft, Users, User2, Clapperboard } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { NavLink, useNavigate, useNavigation } from 'react-router-dom';
+import { Home, PanelLeft, Users, User2, Clapperboard } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { NavLink, useNavigation } from 'react-router-dom'
 
-import logo from '@/assets/logo.svg';
-import { Button } from '@/components/ui/button';
-import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
-import { paths } from '@/config/paths';
-import { cn } from '@/utils/cn';
+import logo from '@/assets/logo.svg'
+import { Button } from '@/components/ui/button'
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer'
+import { paths } from '@/config/paths'
+import { cn } from '@/utils/cn'
 
-import { Link } from '../ui/link';
+import { Link } from '../ui/link'
 
 type SideNavigationItem = {
-  name: string;
-  to: string;
-  icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element;
-};
+  name: string
+  to: string
+  icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element
+}
 
 const Logo = () => {
   return (
     <Link className="flex items-center text-white" to={paths.home.getHref()}>
-      <img className="h-8 w-auto" src={logo} alt="Workflow" />
-      <span className="text-sm font-semibold text-white">
-        Bulletproof React
-      </span>
+      <img className="h-8 w-auto" src={logo} alt="Movies" />
+      <span className="text-sm font-semibold text-white">Movies Challenge</span>
     </Link>
-  );
-};
+  )
+}
 
 const Progress = () => {
-  const { state, location } = useNavigation();
+  const { state, location } = useNavigation()
 
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(0)
 
   useEffect(() => {
-    setProgress(0);
-  }, [location?.pathname]);
+    setProgress(0)
+  }, [location?.pathname])
 
   useEffect(() => {
     if (state === 'loading') {
       const timer = setInterval(() => {
         setProgress((oldProgress) => {
           if (oldProgress === 100) {
-            clearInterval(timer);
-            return 100;
+            clearInterval(timer)
+            return 100
           }
-          const newProgress = oldProgress + 10;
-          return newProgress > 100 ? 100 : newProgress;
-        });
-      }, 300);
+          const newProgress = oldProgress + 10
+          return newProgress > 100 ? 100 : newProgress
+        })
+      }, 300)
 
       return () => {
-        clearInterval(timer);
-      };
+        clearInterval(timer)
+      }
     }
-  }, [state]);
+  }, [state])
 
-  if (state !== 'loading') {
-    return null;
-  }
+  if (state !== 'loading') return null
 
   return (
     <div
       className="fixed left-0 top-0 h-1 bg-blue-500 transition-all duration-200 ease-in-out"
       style={{ width: `${progress}%` }}
     ></div>
-  );
-};
+  )
+}
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
   const navigation = [
     { name: 'Dashboard', to: paths.home.getHref(), icon: Home },
     { name: 'Movies', to: paths.app.movies.getHref(), icon: Clapperboard },
     { name: 'Actors', to: paths.app.actors.getHref(), icon: Users },
-    { name: 'Directors', to: paths.app.directors.getHref(), icon: User2 },
-  ].filter(Boolean) as SideNavigationItem[];
+    { name: 'Directors', to: paths.app.directors.getHref(), icon: User2 }
+  ].filter(Boolean) as SideNavigationItem[]
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -92,15 +87,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 cn(
                   'text-gray-300 hover:bg-gray-700 hover:text-white',
                   'group flex flex-1 w-full items-center rounded-md p-2 text-base font-medium',
-                  isActive && 'bg-gray-900 text-white',
+                  isActive && 'bg-gray-900 text-white'
                 )
               }
             >
               <item.icon
-                className={cn(
-                  'text-gray-400 group-hover:text-gray-300',
-                  'mr-4 size-6 shrink-0',
-                )}
+                className={cn('text-gray-400 group-hover:text-gray-300', 'mr-4 size-6 shrink-0')}
                 aria-hidden="true"
               />
               {item.name}
@@ -118,10 +110,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </DrawerTrigger>
-            <DrawerContent
-              side="left"
-              className="bg-black pt-10 text-white sm:max-w-60"
-            >
+            <DrawerContent side="left" className="bg-black pt-10 text-white sm:max-w-60">
               <nav className="grid gap-6 text-lg font-medium">
                 <div className="flex h-16 shrink-0 items-center px-4">
                   <Logo />
@@ -135,14 +124,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       cn(
                         'text-gray-300 hover:bg-gray-700 hover:text-white',
                         'group flex flex-1 w-full items-center rounded-md p-2 text-base font-medium',
-                        isActive && 'bg-gray-900 text-white',
+                        isActive && 'bg-gray-900 text-white'
                       )
                     }
                   >
                     <item.icon
                       className={cn(
                         'text-gray-400 group-hover:text-gray-300',
-                        'mr-4 size-6 shrink-0',
+                        'mr-4 size-6 shrink-0'
                       )}
                       aria-hidden="true"
                     />
@@ -158,5 +147,5 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
-  );
+  )
 }

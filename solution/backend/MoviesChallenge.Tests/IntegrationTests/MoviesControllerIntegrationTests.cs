@@ -30,7 +30,7 @@ public class MoviesControllerIntegrationTests : IClassFixture<WebApplicationFact
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var movies = await response.Content.ReadFromJsonAsync<PagedResult<MovieDto>>();
+        var movies = await response.Content.ReadFromJsonAsync<List<MovieDto>>();
         Assert.NotNull(movies);
     }
 

@@ -28,23 +28,13 @@ public class MovieServiceUnitTests
     {
         // Arrange
         var movies = new List<Movie> { new Movie { Title = "Movie1" }, new Movie { Title = "Movie2" } };
-        _mockMovieRepository.Setup(repo => repo.GetAllAsync(It.IsAny<PaginationParameters>()))
-                   .ReturnsAsync(new PagedResult<Movie>
-                   {
-                       Data = movies.Skip(0).Take(10),
-                       Meta = new PagedMetadata
-                       {
-                           TotalCount = movies.Count,
-                           Page = 1,
-                           PageSize = 10
-                       }
-                   });
+        _mockMovieRepository.Setup(repo => repo.GetAllAsync()).ReturnsAsync(movies);
 
         // Act
-        var result = await _movieService.GetAllAsync(paginationParams);
+        var result = await _movieService.GetAllAsync();
 
         // Assert
-        Assert.Equal(2, result.Data.Count());
+        Assert.Equal(2, result.Count());
     }
 
     [Fact]

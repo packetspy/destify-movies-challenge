@@ -56,7 +56,6 @@ public class MovieDbContext : DbContext
         {
             if (entity.State == EntityState.Added)
             {
-
                 entity.Property("UniqueId").CurrentValue = Guid.NewGuid();
                 entity.Property("CreatedAt").CurrentValue = timestamp;
                 entity.Property("ModifiedAt").CurrentValue = null;

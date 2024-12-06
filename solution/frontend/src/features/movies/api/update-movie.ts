@@ -1,54 +1,60 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { z } from 'zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { z } from 'zod'
 
-import { api } from '@/lib/api-client';
-import { MutationConfig } from '@/lib/react-query';
-import { Movie } from '@/types/api';
-
-import { getMovieQueryOptions } from './get-movie';
+import { api } from '@/lib/api-client'
+import { MutationConfig } from '@/lib/react-query'
+import { Movie } from '@/types/api'
+import { getMovieQueryOptions } from './get-movie'
 
 export const updateMovieInputSchema = z.object({
+  uniqueId: z.string(),
   title: z.string().min(1, 'Required'),
-  year : z.preprocess((a) => parseInt(z.string().parse(a),10), z.number().min(1900, 'Invalid year').max((new Date()).getFullYear()+1, 'Invalid year')),
+  year: z
+    .number()
+    .min(1900, 'Invalid year')
+    .max(new Date().getFullYear() + 1, 'Invalid year'),
   rated: z.string().min(1, 'Required'),
   genre: z.string().min(1, 'Required'),
   language: z.string().min(1, 'Required'),
   country: z.string().min(1, 'Required'),
   poster: z.string(),
-  plot: z.string().min(1, 'Required'),
-});
+  plot: z.string().min(1, 'Required')
+})
 
-export type UpdateMovieInput = z.infer<typeof updateMovieInputSchema>;
+export const updateRatingInputSchema = z.object({
+  source: z.string().min(1, 'Required'),
+  value: z.string().min(1, 'Required')
+})
+
+export type UpdateMovieInput = z.infer<typeof updateMovieInputSchema>
 
 export const updateMovie = ({
   data,
-  movieUniqueId,
+  movieUniqueId
 }: {
-  data: UpdateMovieInput;
-  movieUniqueId: string;
+  data: UpdateMovieInput
+  movieUniqueId: string
 }): Promise<Movie> => {
-  return api.patch(`/movies/${movieUniqueId}`, data);
-};
+  return api.put(`/movies/${movieUniqueId}`, data)
+}
 
 type UseUpdateMovieOptions = {
-  mutationConfig?: MutationConfig<typeof updateMovie>;
-};
+  mutationConfig?: MutationConfig<typeof updateMovie>
+}
 
-export const useUpdateMovie = ({
-  mutationConfig,
-}: UseUpdateMovieOptions = {}) => {
-  const queryClient = useQueryClient();
+export const useUpdateMovie = ({ mutationConfig }: UseUpdateMovieOptions = {}) => {
+  const queryClient = useQueryClient()
 
-  const { onSuccess, ...restConfig } = mutationConfig || {};
+  const { onSuccess, ...restConfig } = mutationConfig || {}
 
   return useMutation({
     onSuccess: (data, ...args) => {
       queryClient.refetchQueries({
-        queryKey: getMovieQueryOptions(data.uniqueId).queryKey,
-      });
-      onSuccess?.(data, ...args);
+        queryKey: getMovieQueryOptions(data.uniqueId).queryKey
+      })
+      onSuccess?.(data, ...args)
     },
     ...restConfig,
-    mutationFn: updateMovie,
-  });
-};
+    mutationFn: updateMovie
+  })
+}

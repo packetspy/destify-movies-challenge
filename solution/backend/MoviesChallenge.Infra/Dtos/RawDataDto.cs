@@ -24,5 +24,5 @@ public class RawDataDto
 
     public string? Director { get; set; }
 
-    public List<MovieRating>? Ratings { get; set; } = [];
+    public List<MovieRating>? Ratings { get; set; } = new List<MovieRating>();
 }

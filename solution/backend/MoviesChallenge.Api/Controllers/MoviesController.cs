@@ -24,20 +24,10 @@ public class MoviesController : ControllerBase
     }
 
     [HttpGet("paginated")]
-    public async Task<IActionResult> GetPaginatedMovies([FromQuery] PaginationParameters paginationParams)
+    public async Task<IActionResult> GetPaginatedMovies([FromQuery] string? query, [FromQuery] PaginationParameters paginationParams)
     {
-        var pagedResult = await _movieService.GetPaginatedAsync(paginationParams);
+        var pagedResult = await _movieService.GetPaginatedAsync(query, paginationParams);
         return Ok(pagedResult);
-    }
-
-    [HttpGet("search")]
-    public async Task<IActionResult> SearchMovies([FromQuery] string param, [FromQuery] PaginationParameters paginationParams)
-    {
-        if (string.IsNullOrWhiteSpace(param))
-            return BadRequest("Movie title is required for search.");
-
-        var movies = await _movieService.SearchMoviesAsync(param, paginationParams);
-        return Ok(movies);
     }
 
     [HttpGet("{uniqueId}")]

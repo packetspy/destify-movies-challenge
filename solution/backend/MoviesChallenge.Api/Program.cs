@@ -6,6 +6,7 @@ IConfiguration configuration = builder.Configuration;
 
 builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddCustomSwagger();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext();

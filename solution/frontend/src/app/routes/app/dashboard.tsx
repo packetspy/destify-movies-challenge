@@ -1,15 +1,10 @@
-import { ContentLayout } from '@/components/layouts';
+import { ContentLayout } from '@/components/layouts'
 
 export const DashboardRoute = () => {
   return (
     <ContentLayout title="Dashboard">
-      <h1 className="text-xl">
-        Welcome <b></b>
-      </h1>
-      <h4 className="my-3">
-        Your role is : <b></b>
-      </h4>
-      <p className="font-medium">In this application you can:</p>
+      <h1 className="text-xl">Welcome to the dashboard page</h1>
+      <p className="font-medium">Please, use side-menu to navigate.</p>
     </ContentLayout>
-  );
-};
+  )
+}
